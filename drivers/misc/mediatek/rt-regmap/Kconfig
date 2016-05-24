@@ -1,0 +1,8 @@
+config RT_REGMAP
+	bool "Richtek Regmap"
+	depends on ARCH_MT6797
+	select DEBUG_FS
+	default y
+	help
+	  Say Y to enable Richtek Register Map
+

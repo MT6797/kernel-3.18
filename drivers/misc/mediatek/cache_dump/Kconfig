@@ -1,0 +1,5 @@
+config MTK_CACHE_DUMP
+  bool "enable CONFIG_MTK_CACHE_DUMP"
+  default y
+  help
+    Enable cache dump feature
