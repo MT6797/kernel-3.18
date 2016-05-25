@@ -17,7 +17,7 @@ obj-$(CONFIG_MTK_MPU3050C_NEW)   +=  mpu3050c-new/
 obj-$(CONFIG_MTK_ITG1010_NEW)   +=  ITG1010-new/
 obj-$(CONFIG_MTK_L3G4200D)   +=  l3g4200d/
 obj-$(CONFIG_MTK_L3GD20)   +=  l3gd20/
-obj-$(CONFIG_MTK_LSM6DS0)   +=  lsm6ds0/
+obj-$(CONFIG_MTK_LSM6DS0G)   +=  lsm6ds0gy/
 obj-$(CONFIG_MTK_LSM6DS3)   +=  lsm6ds3gy/
 obj-$(CONFIG_MTK_ICM20645GY)   +=  icm20645gy/
 endif

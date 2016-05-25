@@ -1,0 +1,9 @@
+
+config MTK_LSM6DS0G
+        bool "LSM6DS0G for MediaTek package"
+        default n
+	help
+        It support different gyroscope sensor.
+        If this option is set,
+	  	it will support
+         LSM6DS0G gyroscope.
