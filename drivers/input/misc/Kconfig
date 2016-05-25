@@ -12,6 +12,14 @@ menuconfig INPUT_MISC
 
 if INPUT_MISC
 
+config INPUT_HALL_COVER
+	bool "HALL_COVER support"
+	default n
+	help
+	  Support the ONKEY of Marvell HALL_COVER PMICs as an input device
+	  reporting power button status.
+	  To compile this driver as a module, choose M here: the module
+	  will be called HALL_COVER.
 config INPUT_88PM860X_ONKEY
 	tristate "88PM860x ONKEY support"
 	depends on MFD_88PM860X

@@ -4003,7 +4003,10 @@
 			compatible = "mediatek,mt6797-chr_stat";
 			status = "disabled";
 		};
-
+		hall: hall {
+			compatible = "mediatek, hall-eint";
+			status = "disabled";
+		};
 		eint_fusb300_det_in: eint_fusb300_det_in@ {
 			compatible = "mediatek,fusb300-eint";
 		};

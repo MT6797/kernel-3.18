@@ -200,6 +200,12 @@
 		vib_limit = <9>;
 		vib_vol= <5>;
 	};
+	hall_cover {
+		compatible = "hall-cover";
+		status = "okay";
+		hall_code = <0x0c>;
+		hall_name = "cover";
+	};
 /* sensor standardization */
 	cust_accel@0 {
 		compatible				= "mediatek,icm20645g";
@@ -551,7 +557,12 @@
 	status = "okay";
 };
 /* NFC end */
-
+&hall {
+	interrupt-parent = <&eintc>;
+	interrupts = <93 IRQ_TYPE_LEVEL_LOW>;
+	debounce = <93 0>;
+	status = "okay";
+};
 &touch {
 	tpd-resolution = <1440 2560>;
 	use-tpd-button = <0>;
