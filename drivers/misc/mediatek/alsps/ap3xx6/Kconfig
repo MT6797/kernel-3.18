@@ -1,0 +1,9 @@
+
+config MTK_AP3XX6
+	bool "AP3XX6 for MediaTek package"
+	default n
+	help
+	It support different type sensor
+	in this platform. If this option
+	is set, it will support ambient
+	and light sensor AP3XX6.
