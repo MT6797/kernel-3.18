@@ -49,7 +49,7 @@
 /**************************************************************************
 **** Local debug option for this file only ********************************
 **************************************************************************/
-/* #define LK_LOAD_MD_INFO_DEBUG_EN */
+#define LK_LOAD_MD_INFO_DEBUG_EN
 
 #define CCCI_MEM_ALIGN      (SZ_32M)
 #define CCCI_SMEM_ALIGN_MD1 (0x200000)	/*2M */
@@ -86,7 +86,7 @@ typedef struct fos_item {	/* Feature Option Setting */
 #ifdef CONFIG_MTK_MD2_SUPPORT
 #define MTK_MD2_SUPPORT	(CONFIG_MTK_MD2_SUPPORT)
 #else
-#define MTK_MD2_SUPPORT	(1)
+#define MTK_MD2_SUPPORT	(4)
 #endif
 
 /* MD3 */
@@ -111,7 +111,7 @@ typedef struct fos_item {	/* Feature Option Setting */
 #ifdef CONFIG_MTK_MD5_SUPPORT
 #define MTK_MD5_SUPPORT	(CONFIG_MTK_MD5_SUPPORT)
 #else
-#define MTK_MD5_SUPPORT	(3)
+#define MTK_MD5_SUPPORT	(5)
 #endif
 
 /*#define FEATURE_DFO_EN */
@@ -581,6 +581,7 @@ _Load_fail:
 
 	/* Show warning if has some error */
 	/* MD1 part */
+	CCCI_UTIL_ERR_MSG("md_usage_case = 0x%x,md_env_rdy_flag = 0x%x\n",md_usage_case,md_env_rdy_flag);
 	if ((md_usage_case & (1<<MD_SYS1)) && (!(md_env_rdy_flag & (1<<MD_SYS1)))) {
 		CCCI_UTIL_ERR_MSG("md1 env prepare abnormal, disable this modem\n");
 		md_usage_case &= ~(1<<MD_SYS1);
@@ -594,6 +595,7 @@ _Load_fail:
 		lk_load_img_err_no[MD_SYS1] = 0; /* For this case, clear error */
 	}
 	/* MD3 part */
+	CCCI_UTIL_ERR_MSG("md_usage_case = 0x%x,md_env_rdy_flag = 0x%x\n",md_usage_case,md_env_rdy_flag);
 	if ((md_usage_case & (1<<MD_SYS3)) && (!(md_env_rdy_flag & (1<<MD_SYS3)))) {
 		CCCI_UTIL_ERR_MSG("md3 env prepare abnormal, disable this modem\n");
 		md_usage_case &= ~(1<<MD_SYS3);
