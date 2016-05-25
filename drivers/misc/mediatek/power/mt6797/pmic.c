@@ -192,10 +192,15 @@ int pmic_force_vcore_pwm(bool enable)
 	return 0;
 }
 
+#define DUMP_ALL_REG 0
+
 int pmic_dump_all_reg(void)
 {
+#if DUMP_ALL_REG
 	int i;
-	int ret_val = 0, val, val1, val2, val3, val4, val5, val6, val7;
+	int val, val1, val2, val3, val4, val5, val6, val7;
+#endif
+	int ret_val = 0;
 
 	pr_err("[PMIC_dump_all_reg][pmic_status]\n");
 	/*1.UVLO off*/
@@ -240,7 +245,7 @@ int pmic_dump_all_reg(void)
 
 	ret_val = pmic_config_interface(MT6351_BUCK_OC_CON0, 0xFFFF, 0xFFFF, 0);
 	udelay(200);
-
+#if DUMP_ALL_REG /* not dump all reg */
 	pr_err("PMIC_dump_all_reg after clean exception sts\n");
 
 	for (i = 0; i < 0x0fe0; i += 0x10) {
@@ -257,7 +262,7 @@ int pmic_dump_all_reg(void)
 		pr_err("REG[0x%x]=0x%x, REG[0x%x]=0x%x, REG[0x%x]=0x%x, REG[0x%x]=0x%x\n", i+8, val4,
 		i+0xA, val5, i+0xC, val6, i+0xE, val7);
 	}
-
+#endif
 	mdelay(500);
 	mdelay(500);
 	mdelay(500);

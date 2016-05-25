@@ -2306,6 +2306,7 @@ VOID nicRxProcessDataPacket(IN P_ADAPTER_T prAdapter, IN OUT P_SW_RFB_T prSwRfb)
 	P_HW_MAC_RX_DESC_T prRxStatus;
 	BOOLEAN fgDrop;
 	P_STA_RECORD_T prStaRec;
+	UINT_8 ucBssIndex = 0;
 
 	DEBUGFUNC("nicRxProcessDataPacket");
 	/* DBGLOG(INIT, TRACE, ("\n")); */
@@ -2381,66 +2382,85 @@ VOID nicRxProcessDataPacket(IN P_ADAPTER_T prAdapter, IN OUT P_SW_RFB_T prSwRfb)
 	}
 #endif /* CFG_TCP_IP_CHKSUM_OFFLOAD */
 
-	/* if(secCheckClassError(prAdapter, prSwRfb, prStaRec) == TRUE && */
-	if (prAdapter->fgTestMode == FALSE && fgDrop == FALSE) {
-		UINT_8 ucBssIndex = 0;
-#if CFG_HIF_RX_STARVATION_WARNING
-		prRxCtrl->u4QueuedCnt++;
-#endif
-		nicRxFillRFB(prAdapter, prSwRfb);
-		ucBssIndex = secGetBssIdxByWlanIdx(prAdapter, prSwRfb->ucWlanIdx);
-		GLUE_SET_PKT_BSS_IDX(prSwRfb->pvPacket, ucBssIndex);
-		StatsRxPktInfoDisplay(prSwRfb->pvHeader);
-
-		prRetSwRfb = qmHandleRxPackets(prAdapter, prSwRfb);
-		if (prRetSwRfb != NULL) {
-			do {
-				/* save next first */
-				prNextSwRfb = (P_SW_RFB_T) QUEUE_GET_NEXT_ENTRY((P_QUE_ENTRY_T) prRetSwRfb);
-
-				switch (prRetSwRfb->eDst) {
-				case RX_PKT_DESTINATION_HOST:
-					prStaRec = cnmGetStaRecByIndex(prAdapter, prRetSwRfb->ucStaRecIdx);
-					if (prStaRec && IS_STA_IN_AIS(prStaRec)) {
-#if ARP_MONITER_ENABLE
-						qmHandleRxArpPackets(prAdapter, prRetSwRfb);
-#endif
-						u4LastRxPacketTime = kalGetTimeTick();
-					}
-					nicRxProcessPktWithoutReorder(prAdapter, prRetSwRfb);
-					/* when we RX 3/4 */
-					if (EAPOL_KEY_3_OF_4 != secGetEapolKeyType((PUINT_8)prRetSwRfb->pvHeader))
-						break;
-					secSetKeyCmdAction(prAdapter->aprBssInfo[ucBssIndex], EAPOL_KEY_3_OF_4, FALSE);
-					break;
-
-				case RX_PKT_DESTINATION_FORWARD:
-					nicRxProcessForwardPkt(prAdapter, prRetSwRfb);
-					break;
-
-				case RX_PKT_DESTINATION_HOST_WITH_FORWARD:
-					nicRxProcessGOBroadcastPkt(prAdapter, prRetSwRfb);
-					break;
-
-				case RX_PKT_DESTINATION_NULL:
-					nicRxReturnRFB(prAdapter, prRetSwRfb);
-					RX_INC_CNT(prRxCtrl, RX_DST_NULL_DROP_COUNT);
-					RX_INC_CNT(prRxCtrl, RX_DROP_TOTAL_COUNT);
-					break;
-
-				default:
-					break;
-				}
-#if CFG_HIF_RX_STARVATION_WARNING
-				prRxCtrl->u4DequeuedCnt++;
-#endif
-				prRetSwRfb = prNextSwRfb;
-			} while (prRetSwRfb);
-		}
-	} else {
+	if (prAdapter->fgTestMode || fgDrop) {
 		nicRxReturnRFB(prAdapter, prSwRfb);
 		RX_INC_CNT(prRxCtrl, RX_CLASS_ERR_DROP_COUNT);
 		RX_INC_CNT(prRxCtrl, RX_DROP_TOTAL_COUNT);
+		return;
+	}
+
+#if CFG_HIF_RX_STARVATION_WARNING
+	prRxCtrl->u4QueuedCnt++;
+#endif
+	nicRxFillRFB(prAdapter, prSwRfb);
+	ucBssIndex = secGetBssIdxByWlanIdx(prAdapter, prSwRfb->ucWlanIdx);
+	GLUE_SET_PKT_BSS_IDX(prSwRfb->pvPacket, ucBssIndex);
+	StatsRxPktInfoDisplay(prSwRfb->pvHeader);
+
+	prRetSwRfb = qmHandleRxPackets(prAdapter, prSwRfb);
+	while (prRetSwRfb != NULL) {
+		/* save next first */
+		prNextSwRfb = (P_SW_RFB_T) QUEUE_GET_NEXT_ENTRY((P_QUE_ENTRY_T) prRetSwRfb);
+
+		switch (prRetSwRfb->eDst) {
+		case RX_PKT_DESTINATION_HOST:
+			prStaRec = cnmGetStaRecByIndex(prAdapter, prRetSwRfb->ucStaRecIdx);
+			if (prStaRec && IS_STA_IN_AIS(prStaRec)) {
+#if ARP_MONITER_ENABLE
+				qmHandleRxArpPackets(prAdapter, prRetSwRfb);
+#endif
+				u4LastRxPacketTime = kalGetTimeTick();
+			}
+			do {
+				/* when we RX 3/4 */
+				if (prRetSwRfb->u2PacketLen <= ETHER_HEADER_LEN) {
+					DBGLOG(RX, ERROR, "Packet Length is %d\n", prRetSwRfb->u2PacketLen);
+					break;
+				}
+				if (EAPOL_KEY_3_OF_4 != secGetEapolKeyType((PUINT_8)prRetSwRfb->pvHeader))
+					break;
+
+				if (ucBssIndex <= HW_BSSID_NUM) {
+					secSetKeyCmdAction(prAdapter->aprBssInfo[ucBssIndex], EAPOL_KEY_3_OF_4, FALSE);
+					break;
+				} else if (prStaRec && prStaRec->ucBssIndex <= HW_BSSID_NUM) {
+					DBGLOG(RX, INFO,
+						"BSS IDX got from wlan idx is wrong, using bss index from sta record\n");
+					secSetKeyCmdAction(prAdapter->aprBssInfo[prStaRec->ucBssIndex],
+						EAPOL_KEY_3_OF_4, FALSE);
+					break;
+				}
+				ucBssIndex = secGetBssIdxByNetType(prAdapter);
+				if (ucBssIndex <= HW_BSSID_NUM) {
+					secSetKeyCmdAction(prAdapter->aprBssInfo[ucBssIndex], EAPOL_KEY_3_OF_4, FALSE);
+					break;
+				}
+				DBGLOG(RX, ERROR, "Can't get bss index base on network type\n");
+			} while (FALSE);
+			nicRxProcessPktWithoutReorder(prAdapter, prRetSwRfb);
+			break;
+
+		case RX_PKT_DESTINATION_FORWARD:
+			nicRxProcessForwardPkt(prAdapter, prRetSwRfb);
+			break;
+
+		case RX_PKT_DESTINATION_HOST_WITH_FORWARD:
+			nicRxProcessGOBroadcastPkt(prAdapter, prRetSwRfb);
+			break;
+
+		case RX_PKT_DESTINATION_NULL:
+			nicRxReturnRFB(prAdapter, prRetSwRfb);
+			RX_INC_CNT(prRxCtrl, RX_DST_NULL_DROP_COUNT);
+			RX_INC_CNT(prRxCtrl, RX_DROP_TOTAL_COUNT);
+			break;
+
+		default:
+			break;
+		}
+#if CFG_HIF_RX_STARVATION_WARNING
+		prRxCtrl->u4DequeuedCnt++;
+#endif
+		prRetSwRfb = prNextSwRfb;
 	}
 }
 #if CFG_SUPPORT_GSCN
@@ -3360,60 +3380,16 @@ VOID nicRxProcessEventPacket(IN P_ADAPTER_T prAdapter, IN OUT P_SW_RFB_T prSwRfb
 	case EVENT_ID_DEBUG_MSG:
 		{
 			P_EVENT_DEBUG_MSG_T prEventDebugMsg;
-			UINT_16 u2DebugMsgId;
 			UINT_8 ucMsgType;
-			UINT_8 ucFlags;
-			UINT_32 u4Value;
 			UINT_16 u2MsgSize;
 			P_UINT_8 pucMsg;
-			OS_SYSTIME rCurrentTime;
-			static OS_SYSTIME rFwLogStartTime;
-			static UINT_8 ucFwLogLine;
 
-
-			prEventDebugMsg = (P_EVENT_DEBUG_MSG_T) (prEvent->aucBuffer);
-
-			u2DebugMsgId = prEventDebugMsg->u2DebugMsgId;
+			prEventDebugMsg = (P_EVENT_DEBUG_MSG_T)(prEvent->aucBuffer);
 			ucMsgType = prEventDebugMsg->ucMsgType;
-			ucFlags = prEventDebugMsg->ucFlags;
-			u4Value = prEventDebugMsg->u4Value;
 			u2MsgSize = prEventDebugMsg->u2MsgSize;
 			pucMsg = prEventDebugMsg->aucMsg;
 
-			if (u2MsgSize <= DEBUG_MSG_SIZE_MAX) {
-				if (ucMsgType >= DEBUG_MSG_TYPE_END)
-					ucMsgType = DEBUG_MSG_TYPE_MEM32;
-				/* This writing is for Check patch: Too many leading tabs*/
-				if (ucMsgType == DEBUG_MSG_TYPE_ASCII) {
-					if (aucDebugModule[DBG_SW4_IDX] & DBG_CLASS_TRACE) {
-						LOG_FUNC("FW:%s\n", pucMsg);
-						break;
-					}
-					GET_CURRENT_SYSTIME(&rCurrentTime);
-					if (rFwLogStartTime == 0 ||
-						CHECK_FOR_TIMEOUT(rCurrentTime, rFwLogStartTime,
-							MSEC_TO_SYSTIME(1000))) {
-						COPY_SYSTIME(rFwLogStartTime, rCurrentTime);
-						ucFwLogLine = 0;
-					}
-					if (ucFwLogLine < 5) {
-						ucFwLogLine++;
-						pucMsg[u2MsgSize] = '\0';
-						DBGLOG(RX, INFO, "FW:(%d)%s\n", ucFwLogLine, pucMsg);
-					}
-				} else if (ucMsgType == DEBUG_MSG_TYPE_MEM32) {
-					/* dumpMemory32(pucMsg, u2MsgSize); */
-					DBGLOG_MEM32(SW4, TRACE, pucMsg, u2MsgSize);
-				} else if (prEventDebugMsg->ucMsgType == DEBUG_MSG_TYPE_MEM8) {
-					/* dumpMemory8(pucMsg, u2MsgSize); */
-					DBGLOG_MEM8(SW4, TRACE, pucMsg, u2MsgSize);
-				} else {
-					/* dumpMemory32(pucMsg, u2MsgSize); */
-					DBGLOG_MEM32(SW4, TRACE, pucMsg, u2MsgSize);
-				}
-			} /* DEBUG_MSG_SIZE_MAX */
-			else
-				DBGLOG(SW4, WARN, "Debug msg size %u is too large.\n", u2MsgSize);
+			wlanPrintFwLog(pucMsg, u2MsgSize, ucMsgType);
 		}
 		break;
 #if CFG_SUPPORT_SCN_PSCN

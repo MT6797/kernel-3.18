@@ -284,7 +284,7 @@ BOOLEAN secIsProtected1xFrame(IN P_ADAPTER_T prAdapter, IN P_STA_RECORD_T prStaR
 BOOLEAN secIsProtectedBss(IN P_ADAPTER_T prAdapter, IN P_BSS_INFO_T prBssInfo);
 
 BOOLEAN tkipMicDecapsulate(IN P_SW_RFB_T prSwRfb, IN PUINT_8 pucMicKey);
-
+UINT_8 secGetBssIdxByNetType(P_ADAPTER_T prAdapter);
 /*******************************************************************************
  *                              F U N C T I O N S
  ********************************************************************************

@@ -235,6 +235,40 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 		}
 	}
 
+#if defined(CONFIG_ARM64) && defined(CONFIG_ZONE_MOVABLE_CMA)
+	if ((sc->gfp_mask & (__GFP_MOVABLE|__GFP_HIGHMEM)) != (__GFP_MOVABLE|__GFP_HIGHMEM)) {
+		struct zone *zone;
+		unsigned long zone_free, zone_file;
+		bool should_be_aggressive = false;
+
+		/* Allocation is from DMA zone */
+		zone = &NODE_DATA(0)->node_zones[ZONE_DMA];
+
+		/*
+		 * LMK will be aggressive in the one of the following conditions,
+		 * 1. free pages <= min watermark
+		 */
+		zone_free = zone_page_state(zone, NR_FREE_PAGES);
+		zone_file = zone_page_state(zone, NR_FILE_PAGES);
+		if (zone_free <= min_wmark_pages(zone))
+			should_be_aggressive = true;
+
+		/* 2. Less file pages */
+		zone_file >>= 4;
+		if (zone_free <= low_wmark_pages(zone) && zone_file <= SWAP_CLUSTER_MAX)
+			should_be_aggressive = true;
+
+		/* To be aggressive if needed */
+		if (should_be_aggressive) {
+			pr_alert("Aggressive LMK for severe low memory!\n");
+			if (total_swap_pages != 0)
+				min_score_adj = 0;
+			else
+				min_score_adj = 1;
+		}
+	}
+#endif
+
 	/* If in CPU hotplugging, let LMK be more aggressive */
 	if (in_cpu_hotplugging) {
 		pr_alert("Aggressive LMK during CPU hotplug!\n");

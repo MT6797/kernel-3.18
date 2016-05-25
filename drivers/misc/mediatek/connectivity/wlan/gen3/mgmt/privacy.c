@@ -1344,3 +1344,33 @@ VOID secSetKeyCmdAction(P_BSS_INFO_T prBssInfo, UINT_8 ucEapolKeyType, BOOLEAN f
 		break;
 	}
 }
+
+UINT_8 secGetBssIdxByNetType(P_ADAPTER_T prAdapter)
+{
+	P_BSS_INFO_T prBssInfo = NULL;
+	UINT_8 i = 0;
+	UINT_8 ucBssIndex = 0xff;
+	BOOLEAN fgP2pDevice = FALSE;
+	BOOLEAN fgAisDevice = FALSE;
+
+	for (; i < BSS_INFO_NUM; i++) {
+		prBssInfo = prAdapter->aprBssInfo[i];
+		if (prBssInfo->eConnectionState != PARAM_MEDIA_STATE_CONNECTED)
+			continue;
+		if (prBssInfo->eNetworkType == NETWORK_TYPE_AIS) {
+			fgAisDevice = TRUE;
+			ucBssIndex = prBssInfo->ucBssIndex;
+#if CFG_ENABLE_WIFI_DIRECT
+		} else	if (prBssInfo->eNetworkType == NETWORK_TYPE_P2P &&
+			prBssInfo->eCurrentOPMode == OP_MODE_P2P_DEVICE) {
+			fgP2pDevice = TRUE;
+			ucBssIndex = prBssInfo->ucBssIndex;
+#endif
+		}
+	}
+	if (fgP2pDevice && fgAisDevice) {
+		DBGLOG(RSN, INFO, "p2p device & ais co-exist\n");
+		return 0xff;
+	}
+	return ucBssIndex;
+}
