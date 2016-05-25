@@ -23,6 +23,11 @@
 		compatible = "mediatek,camera_sub";
 		reg = <0x3c>;
 	};
+	
+	i2c_lcd_bias@3e {
+		compatible = "mediatek,i2c_lcd_bias";
+		reg = <0x3e>;
+	};
 
 };
 
@@ -32,10 +37,6 @@
 		reg = <0x5d>;
 	};
 
-	i2c_lcd_bias@3e {
-		compatible = "mediatek,i2c_lcd_bias";
-		reg = <0x3e>;
-	};
 
 };
 
