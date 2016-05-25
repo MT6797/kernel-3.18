@@ -951,6 +951,7 @@ int kdCISModulePowerOn(CAMERA_DUAL_CAMERA_SENSOR_ENUM SensorIdx, char *currSenso
 {
 
 	int pwListIdx, pwIdx;
+	int i;
 	BOOL sensorInPowerList = KAL_FALSE;
 
 	if (DUAL_CAMERA_MAIN_SENSOR == SensorIdx) {
@@ -980,7 +981,11 @@ int kdCISModulePowerOn(CAMERA_DUAL_CAMERA_SENSOR_ENUM SensorIdx, char *currSenso
 				//PK_INFO("sensorIdx:%d\n", SensorIdx);
 
 				sensorInPowerList = KAL_TRUE;
-
+				for(i=0;i<2;i++)
+				{
+					mtkcam_gpio_set(i, PDN, pinSet[i][IDX_PS_CMPDN + IDX_PS_OFF]);
+				  mtkcam_gpio_set(i, RST, pinSet[i][IDX_PS_CMRST + IDX_PS_OFF]);
+				}
 				for (pwIdx = 0; pwIdx < 10; pwIdx++) {
 					PK_DBG("PowerType:%d\n", PowerOnList.PowerSeq[pwListIdx].PowerInfo[pwIdx].PowerType);
 					if (PowerOnList.PowerSeq[pwListIdx].PowerInfo[pwIdx].
