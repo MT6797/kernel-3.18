@@ -851,9 +851,9 @@ int mt_brightness_set_pmic(enum mt65xx_led_pmic pmic_type, u32 level, u32 div)
 		pmic_set_register_value(PMIC_ISINK_DIM4_DUTY, 15);
 		pmic_set_register_value(PMIC_ISINK_DIM4_FSEL, ISINK_1KHZ);	/* 1KHz */
 		if (level)
-			pmic_set_register_value(PMIC_ISINK_CH5_EN, NLED_ON);
+			pmic_set_register_value(PMIC_ISINK_CH4_EN, NLED_ON);
 		else
-			pmic_set_register_value(PMIC_ISINK_CH5_EN, NLED_OFF);
+			pmic_set_register_value(PMIC_ISINK_CH4_EN, NLED_OFF);
 		mutex_unlock(&leds_pmic_mutex);
 		return 0;
 	} else if (pmic_type == MT65XX_LED_PMIC_NLED_ISINK3) {
