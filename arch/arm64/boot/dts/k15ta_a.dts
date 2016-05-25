@@ -713,7 +713,9 @@
 			"anc_dat_mosi_off",
 			"anc_dat_mosi_on",
 			"hpdepop-pullhigh_e2",
-			"hpdepop-pulllow_e2";
+			"hpdepop-pulllow_e2",
+			"audextamp_high",
+			"audextamp_low";
 	pinctrl-0 = <&aud_clk_mosi_off>;
 	pinctrl-1 = <&aud_clk_mosi_on>;
 	pinctrl-2 = <&aud_pins_smartpa_mode0>;
@@ -735,6 +737,8 @@
 	pinctrl-18 = <&anc_dat_mosi_on>;
 	pinctrl-19 = <&aud_pins_hpdepop_high_e2>;
 	pinctrl-20 = <&aud_pins_hpdepop_low_e2>;
+	pinctrl-21 = <&aud_pins_audextamp_high>;
+	pinctrl-22 = <&aud_pins_audextamp_low>;
 	status = "okay";
 };
 
@@ -907,13 +911,20 @@
 		};
 	};
 
-	/* external amp support */
-	max98926L@31 {
-		compatible = "maxim,max98926L";
-		reg = <0x31>;
-		vmon-slot-no = <1>;
-		imon-slot-no = <5>;
-		status = "ok";
+	aud_pins_audextamp_high: audextamphigh {
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO89__FUNC_GPIO89>;
+			slew-rate = <1>;
+			output-high;
+		};
+	};
+
+	aud_pins_audextamp_low: audextamplow {
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO89__FUNC_GPIO89>;
+			slew-rate = <1>;
+			output-low;
+		};
 	};
 };
 /* AUDIO end */
