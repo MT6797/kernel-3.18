@@ -1147,17 +1147,18 @@ static long mmc3416x_unlocked_ioctl(struct file *file, unsigned int cmd, unsigne
 		}
 		osensor_data = (struct hwm_sensor_data *)buff;
 		mutex_lock(&sensor_data_mutex);
-
+/*
 		osensor_data->values[0] = sensor_data[8] * CONVERT_O;
 		osensor_data->values[1] = sensor_data[9] * CONVERT_O;
 		osensor_data->values[2] = sensor_data[10] * CONVERT_O;
 		osensor_data->status = sensor_data[11];
 		osensor_data->value_divide = CONVERT_O_DIV;
-
+*/
+		ECS_GetRawData(vec);
 		mutex_unlock(&sensor_data_mutex);
-
-		sprintf(buff, "%x %x %x %x %x", osensor_data->values[0], osensor_data->values[1],
-			osensor_data->values[2], osensor_data->status, osensor_data->value_divide);
+		sprintf(buff, "%x %x %x", vec[0], vec[1], vec[2]);
+		//sprintf(buff, "%x %x %x %x %x", osensor_data->values[0], osensor_data->values[1],
+			//osensor_data->values[2], osensor_data->status, osensor_data->value_divide);
 		if (copy_to_user(argp, buff, strlen(buff)+1))
 			return -EFAULT;
 
