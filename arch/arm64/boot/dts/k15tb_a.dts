@@ -1,6 +1,7 @@
 /dts-v1/;
 
 #include "mt6797.dtsi"
+#include "batt_meter_k15tb_a_xunda_3300mA.dtsi"
 #include <dt-bindings/lcm/r63419_wqhd_truly_phantom_2k_cmd_ok_mt6797.dtsi>
 
 / {
