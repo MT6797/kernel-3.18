@@ -18,7 +18,13 @@ config MTK_FINGERPRINT_SELECT
 	string "sensor type"
 	default "GF318M"
 
-
+# Fingerprint sensor
+if MTK_FINGERPRINT_SELECT = "ET310"
+config MTK_ET310
+        bool "ET310 for MediaTek package"
+        default n
+endif
+	
 if MTK_FINGERPRINT_SELECT = "FPC1145"
 config FPC_FINGERPRINT
 	bool "FPC Fingerprint"

@@ -380,6 +380,13 @@
 			alignment = <0 0x1000000>;
 			alloc-ranges = <0 0x40000000 0 0x50000000>; /*0x4000_0000~0x8FFF_FFFF*/
 		};
+		spi-reserve-memory {
+	   compatible = "mediatek,spi-reserve-memory";
+	   no-map;
+	   size = <0 0x8000>; /* SPI USER MEMORY SIZE  ----大小需要与spi-dev.c的reserve_memory_spi_fn一 致*/
+	   alignment = <0 0x10000>;
+	   alloc-ranges = <0 0x40000000 0 0x80000000>;
+  	};
 
 	};
 
@@ -4005,6 +4012,10 @@
 		};
 		hall: hall {
 			compatible = "mediatek, hall-eint";
+			status = "disabled";
+		};
+		fp: fp {
+			compatible = "mediatek, fp-eint";
 			status = "disabled";
 		};
 		eint_fusb300_det_in: eint_fusb300_det_in@ {

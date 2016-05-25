@@ -414,20 +414,6 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 
-	fpc1145@0 {
-		compatible = "fpc,fpc1020";
-		reg = <0>;
-		spi-max-frequency = <16000000>;
-		/* fpc,gpio_irq = <0>; */
-		fpc,gpio_reset = <256>;
-		/* fpc,gpio_cs = <85>; */
-		/* fpc,vddtx_mv = <3300>;  */
-		/* fpc,txout_boost_enable; */
-		/* fpc,force_hwid = <0x1234> */
-		/* vcc_spi-supply = <&pm8941_s3>; */
-		/* vdd_ana-supply = <&pm8941_lvs1>; */
-		/* vdd_io-supply = <&pm8941_lvs1>; */
-	};
 };
 
 /* NFC GPIO standardization */
@@ -561,6 +547,12 @@
 	interrupt-parent = <&eintc>;
 	interrupts = <93 IRQ_TYPE_LEVEL_LOW>;
 	debounce = <93 0>;
+	status = "okay";
+};
+&fp {
+	interrupt-parent = <&eintc>;
+	interrupts = <86 IRQ_TYPE_EDGE_RISING>;
+	debounce = <86 0>;
 	status = "okay";
 };
 &touch {
