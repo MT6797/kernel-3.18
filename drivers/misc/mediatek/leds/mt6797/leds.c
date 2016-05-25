@@ -43,6 +43,37 @@
 #define MET_USER_EVENT_SUPPORT
 #include <mt-plat/met_drv.h>
 
+
+/*---------------------SET BREATH MODE------------------------------------------*/
+
+#define NOTIFICATIONS_TR1_SEL  0X03
+#define NOTIFICATIONS_TR2_SEL  0X02
+#define NOTIFICATIONS_TF1_SEL  0X00
+#define NOTIFICATIONS_TF2_SEL  0X00
+#define NOTIFICATIONS_TON_SEL  0X03
+#define NOTIFICATIONS_TOFF_SEL 0X01
+
+#define BAT_MEDIUM_TR1_SEL  0x02
+#define BAT_MEDIUM_TR2_SEL  0X03
+#define BAT_MEDIUM_TF1_SEL  0X02
+#define BAT_MEDIUM_TF2_SEL  0X03
+#define BAT_MEDIUM_TON_SEL  0X00
+#define BAT_MEDIUM_TOFF_SEL 0X02
+
+#define BAT_LOW_TR1_SEL  0x00
+#define BAT_LOW_TR2_SEL  0X00
+#define BAT_LOW_TF1_SEL  0X00
+#define BAT_LOW_TF2_SEL  0X00
+#define BAT_LOW_TON_SEL  0X00
+#define BAT_LOW_TOFF_SEL 0X03
+
+/*------------------------------------------------------------------------------*/
+
+
+
+
+
+
 /* for LED&Backlight bringup, define the dummy API */
 #ifndef CONFIG_MTK_PMIC
 u16 pmic_set_register_value(u32 flagname, u32 val)
@@ -769,6 +800,189 @@ unsigned int mt_show_pwm_register(unsigned int addr)
 	return 0;
 }
 
+
+
+void set_isink1_breath_mode(u32 level)
+{
+	if (level==255)   /*BUTTON normal on */
+	{
+		pmic_set_register_value(PMIC_ISINK_CH1_MODE, ISINK_PWM_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH1_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_DIM1_DUTY,31);
+		pmic_set_register_value(PMIC_ISINK_CH1_EN,NLED_ON);
+	}
+	else if (level==128)   /*NOTIFICATIONS	brith mode1*/	/*!!!no use here!!!*/
+	{
+		pmic_set_register_value(PMIC_ISINK_CH1_MODE, ISINK_BREATH_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH1_STEP, ISINK_2);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TR1_SEL,NOTIFICATIONS_TR1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TR2_SEL,NOTIFICATIONS_TR2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TF1_SEL,NOTIFICATIONS_TF1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TF2_SEL,NOTIFICATIONS_TF2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TON_SEL,NOTIFICATIONS_TON_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TOFF_SEL,NOTIFICATIONS_TOFF_SEL);
+		pmic_set_register_value(PMIC_ISINK_CH1_EN,NLED_ON);
+	}
+	else if (level==64)    /*BATTERY  charge  >90 normal on */
+	{
+		pmic_set_register_value(PMIC_ISINK_CH1_MODE, ISINK_PWM_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH1_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_DIM1_DUTY,31);
+		pmic_set_register_value(PMIC_ISINK_CH1_EN,NLED_ON);
+	}
+	else if (level==32) /*BATTERY  charge <90  brith mode2*/
+	{
+		pmic_set_register_value(PMIC_ISINK_CH1_MODE, ISINK_BREATH_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH1_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TR1_SEL,BAT_MEDIUM_TR1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TR2_SEL,BAT_MEDIUM_TR2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TF1_SEL,BAT_MEDIUM_TF1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TF2_SEL,BAT_MEDIUM_TF2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TON_SEL,BAT_MEDIUM_TON_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TOFF_SEL,BAT_MEDIUM_TOFF_SEL);
+		pmic_set_register_value(PMIC_ISINK_CH1_EN,NLED_ON);
+	}
+	else if (level==16) /*BATTERY  no charge <15 brith mode3*/	/*!!!no use here!!!*/
+	{
+		pmic_set_register_value(PMIC_ISINK_CH1_MODE, ISINK_BREATH_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH1_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TR1_SEL,BAT_LOW_TR1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TR2_SEL,BAT_LOW_TR2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TF1_SEL,BAT_LOW_TF1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TF2_SEL,BAT_LOW_TF2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TON_SEL,BAT_LOW_TON_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH1_TOFF_SEL,BAT_LOW_TOFF_SEL);
+		pmic_set_register_value(PMIC_ISINK_CH1_EN,NLED_ON);
+	}
+	else
+	{
+		pmic_set_register_value(PMIC_ISINK_CH1_EN,NLED_OFF);
+	}
+
+}
+
+void set_isink2_breath_mode(u32 level)
+{
+	if (level==255)   /*BUTTON normal on */
+	{
+		pmic_set_register_value(PMIC_ISINK_CH4_MODE, ISINK_PWM_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH4_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_DIM4_DUTY,31);
+		pmic_set_register_value(PMIC_ISINK_CH4_EN,NLED_ON);
+	}
+	else if (level==128)   /*NOTIFICATIONS	brith mode1*/	/*!!!no use here!!!*/
+	{
+		pmic_set_register_value(PMIC_ISINK_CH4_MODE, ISINK_BREATH_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH4_STEP, ISINK_2);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TR1_SEL,NOTIFICATIONS_TR1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TR2_SEL,NOTIFICATIONS_TR2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TF1_SEL,NOTIFICATIONS_TF1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TF2_SEL,NOTIFICATIONS_TF2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TON_SEL,NOTIFICATIONS_TON_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TOFF_SEL,NOTIFICATIONS_TOFF_SEL);
+		pmic_set_register_value(PMIC_ISINK_CH4_EN,NLED_ON);
+	}
+	else if (level==64)    /*BATTERY  charge  >90 normal on */
+	{
+		pmic_set_register_value(PMIC_ISINK_CH4_MODE, ISINK_PWM_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH4_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_DIM4_DUTY,31);
+		pmic_set_register_value(PMIC_ISINK_CH4_EN,NLED_ON);
+	}
+	else if (level==32) /*BATTERY  charge <90  brith mode2*/
+	{
+		pmic_set_register_value(PMIC_ISINK_CH4_MODE, ISINK_BREATH_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH4_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TR1_SEL,BAT_MEDIUM_TR1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TR2_SEL,BAT_MEDIUM_TR2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TF1_SEL,BAT_MEDIUM_TF1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TF2_SEL,BAT_MEDIUM_TF2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TON_SEL,BAT_MEDIUM_TON_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TOFF_SEL,BAT_MEDIUM_TOFF_SEL);
+		pmic_set_register_value(PMIC_ISINK_CH4_EN,NLED_ON);
+	}
+	else if (level==16) /*BATTERY  no charge <15 brith mode3*/	
+	{
+		pmic_set_register_value(PMIC_ISINK_CH4_MODE, ISINK_BREATH_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH4_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TR1_SEL,BAT_LOW_TR1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TR2_SEL,BAT_LOW_TR2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TF1_SEL,BAT_LOW_TF1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TF2_SEL,BAT_LOW_TF2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TON_SEL,BAT_LOW_TON_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH4_TOFF_SEL,BAT_LOW_TOFF_SEL);
+		pmic_set_register_value(PMIC_ISINK_CH4_EN,NLED_ON);
+	}
+	else
+	{
+		pmic_set_register_value(PMIC_ISINK_CH4_EN,NLED_OFF);
+	}
+
+}
+
+void set_isink3_breath_mode(u32 level)
+{
+	if (level==255)   /*BUTTON normal on */
+	{
+		pmic_set_register_value(PMIC_ISINK_CH5_MODE, ISINK_PWM_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH5_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_DIM5_DUTY,31);
+		pmic_set_register_value(PMIC_ISINK_CH5_EN,NLED_ON);
+	}
+	else if (level==128)   /*NOTIFICATIONS	brith mode1*/	
+	{
+		pmic_set_register_value(PMIC_ISINK_CH5_MODE, ISINK_BREATH_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH5_STEP, ISINK_2);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TR1_SEL,NOTIFICATIONS_TR1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TR2_SEL,NOTIFICATIONS_TR2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TF1_SEL,NOTIFICATIONS_TF1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TF2_SEL,NOTIFICATIONS_TF2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TON_SEL,NOTIFICATIONS_TON_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TOFF_SEL,NOTIFICATIONS_TOFF_SEL);
+		pmic_set_register_value(PMIC_ISINK_CH5_EN,NLED_ON);
+	}
+	else if (level==64)    /*BATTERY  charge  >90 normal on */
+	{
+		pmic_set_register_value(PMIC_ISINK_CH5_MODE, ISINK_PWM_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH5_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_DIM5_DUTY,31);
+		pmic_set_register_value(PMIC_ISINK_CH5_EN,NLED_ON);
+	}
+	else if (level==32) /*BATTERY  charge <90  brith mode2*/
+	{
+		pmic_set_register_value(PMIC_ISINK_CH5_MODE, ISINK_BREATH_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH5_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TR1_SEL,BAT_MEDIUM_TR1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TR2_SEL,BAT_MEDIUM_TR2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TF1_SEL,BAT_MEDIUM_TF1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TF2_SEL,BAT_MEDIUM_TF2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TON_SEL,BAT_MEDIUM_TON_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TOFF_SEL,BAT_MEDIUM_TOFF_SEL);
+		pmic_set_register_value(PMIC_ISINK_CH5_EN,NLED_ON);
+	}
+	else if (level==16) /*BATTERY  no charge <15 brith mode3*/	/*!!!no use here!!!*/
+	{
+		pmic_set_register_value(PMIC_ISINK_CH5_MODE, ISINK_BREATH_MODE);
+		pmic_set_register_value(PMIC_ISINK_CH5_STEP, ISINK_1);	/*000-4mA 001-8mA 010-12mA 011-16mA 100-20mA..*/
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TR1_SEL,BAT_LOW_TR1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TR2_SEL,BAT_LOW_TR2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TF1_SEL,BAT_LOW_TF1_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TF2_SEL,BAT_LOW_TF2_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TON_SEL,BAT_LOW_TON_SEL);
+		pmic_set_register_value(PMIC_ISINK_BREATH5_TOFF_SEL,BAT_LOW_TOFF_SEL);
+		pmic_set_register_value(PMIC_ISINK_CH5_EN,NLED_ON);
+	}
+	else
+	{
+		pmic_set_register_value(PMIC_ISINK_CH5_EN,NLED_OFF);
+	}
+
+
+}
+
+
+
+
 int mt_brightness_set_pmic(enum mt65xx_led_pmic pmic_type, u32 level, u32 div)
 {
 	static bool first_time = true;
@@ -819,6 +1033,7 @@ int mt_brightness_set_pmic(enum mt65xx_led_pmic pmic_type, u32 level, u32 div)
 		pmic_set_register_value(PMIC_RG_DRV_32K_CK_PDN, 0x0);	/* Disable power down */
 		pmic_set_register_value(PMIC_RG_DRV_ISINK1_CK_PDN, 0);
 		pmic_set_register_value(PMIC_RG_DRV_ISINK1_CK_CKSEL, 0);
+	#if 0
 		pmic_set_register_value(PMIC_ISINK_CH1_MODE, ISINK_PWM_MODE);
 		pmic_set_register_value(PMIC_ISINK_CH1_STEP, ISINK_3);	/* 16mA */
 		pmic_set_register_value(PMIC_ISINK_DIM1_DUTY, 15);
@@ -827,6 +1042,9 @@ int mt_brightness_set_pmic(enum mt65xx_led_pmic pmic_type, u32 level, u32 div)
 			pmic_set_register_value(PMIC_ISINK_CH1_EN, NLED_ON);
 		else
 			pmic_set_register_value(PMIC_ISINK_CH1_EN, NLED_OFF);
+	#else
+		set_isink1_breath_mode(level);
+	#endif
 		mutex_unlock(&leds_pmic_mutex);
 		return 0;
 	} else if (pmic_type == MT65XX_LED_PMIC_NLED_ISINK2) {
@@ -846,6 +1064,7 @@ int mt_brightness_set_pmic(enum mt65xx_led_pmic pmic_type, u32 level, u32 div)
 		pmic_set_register_value(PMIC_RG_DRV_32K_CK_PDN, 0x0);	/* Disable power down */
 		pmic_set_register_value(PMIC_RG_DRV_ISINK4_CK_PDN, 0);
 		pmic_set_register_value(PMIC_RG_DRV_ISINK4_CK_CKSEL, 0);
+	#if 0
 		pmic_set_register_value(PMIC_ISINK_CH4_MODE, ISINK_PWM_MODE);
 		pmic_set_register_value(PMIC_ISINK_CH4_STEP, ISINK_3);	/* 16mA */
 		pmic_set_register_value(PMIC_ISINK_DIM4_DUTY, 15);
@@ -854,6 +1073,9 @@ int mt_brightness_set_pmic(enum mt65xx_led_pmic pmic_type, u32 level, u32 div)
 			pmic_set_register_value(PMIC_ISINK_CH4_EN, NLED_ON);
 		else
 			pmic_set_register_value(PMIC_ISINK_CH4_EN, NLED_OFF);
+	#else
+		set_isink2_breath_mode(level);
+	#endif
 		mutex_unlock(&leds_pmic_mutex);
 		return 0;
 	} else if (pmic_type == MT65XX_LED_PMIC_NLED_ISINK3) {
@@ -873,6 +1095,7 @@ int mt_brightness_set_pmic(enum mt65xx_led_pmic pmic_type, u32 level, u32 div)
 		pmic_set_register_value(PMIC_RG_DRV_32K_CK_PDN, 0x0);	/* Disable power down */
 		pmic_set_register_value(PMIC_RG_DRV_ISINK5_CK_PDN, 0);
 		pmic_set_register_value(PMIC_RG_DRV_ISINK5_CK_CKSEL, 0);
+	#if 0
 		pmic_set_register_value(PMIC_ISINK_CH5_MODE, ISINK_PWM_MODE);
 		pmic_set_register_value(PMIC_ISINK_CH5_STEP, ISINK_3);	/* 16mA */
 		pmic_set_register_value(PMIC_ISINK_DIM5_DUTY, 15);
@@ -881,6 +1104,9 @@ int mt_brightness_set_pmic(enum mt65xx_led_pmic pmic_type, u32 level, u32 div)
 			pmic_set_register_value(PMIC_ISINK_CH5_EN, NLED_ON);
 		else
 			pmic_set_register_value(PMIC_ISINK_CH5_EN, NLED_OFF);
+	#else
+		set_isink3_breath_mode(level);
+	#endif
 		mutex_unlock(&leds_pmic_mutex);
 		return 0;
 	}
