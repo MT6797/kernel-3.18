@@ -17,7 +17,7 @@
 #include <lcm_drv.h>
 
 extern LCM_DRIVER nt35523_fhd_dsi_vdo_lcm_drv;
-
+extern LCM_DRIVER ili9885_fhd_dsi_vdo_lcm_drv;
 
 #ifdef BUILD_LK
 extern void mdelay(unsigned long msec);
