@@ -239,7 +239,7 @@
 		compatible				= "mediatek,mmc3416x";
 		i2c_num					= <1>;
 		i2c_addr				= <0x30 0 0 0>;
-		direction				= <6>;
+		direction				= <2>;
 		power_id				= <0xffff>;
 		power_vol				= <0>;
 		is_batch_supported		= <0>;
@@ -249,7 +249,7 @@
 		compatible			= "mediatek,lsm6ds0g";
 		i2c_num					= <1>;
 		/* i2c_addr			= <0x68 0 0 0>; */
-		direction			= <6>;
+		direction			= <2>;
 		power_id				= <0xffff>;
 		power_vol				= <0>;
 		firlen					= <0>;
