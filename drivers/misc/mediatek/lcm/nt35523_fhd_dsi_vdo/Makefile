@@ -16,7 +16,7 @@
 #
 
 
-obj-y += nt35523_wxga_dsi_vdo_boe.o
+obj-y += nt35523_fhd_dsi_vdo.o
 
 ccflags-$(CONFIG_MTK_LCM) += -I$(srctree)/drivers/misc/mediatek/lcm/inc
 

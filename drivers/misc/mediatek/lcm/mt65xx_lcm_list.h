@@ -16,7 +16,7 @@
 
 #include <lcm_drv.h>
 
-extern LCM_DRIVER r63419_wqhd_boyi_vdo_lcm_drv;
+extern LCM_DRIVER nt35523_fhd_dsi_vdo_lcm_drv;
 
 
 #ifdef BUILD_LK

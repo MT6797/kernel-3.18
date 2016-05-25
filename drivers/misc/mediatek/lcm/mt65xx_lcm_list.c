@@ -37,6 +37,10 @@ LCM_DRIVER *lcm_driver_list[] = {
 #if defined(R63419_WQHD_BOYI_VDO)
 	&r63419_wqhd_boyi_vdo_lcm_drv,
 #endif
+#if defined(NT35523_FHD_DSI_VDO)
+	&nt35523_fhd_dsi_vdo_lcm_drv,
+
+#endif
 };
 
 unsigned char lcm_name_list[][128] = {
