@@ -66,21 +66,30 @@ Functions
 *****************************************************************************/
 static void work_timeOutFunc(struct work_struct *data);
 
+extern int flashEnable_SGM3784_2(void);
+extern int flashDisable_SGM3784_2(void);
+extern int setDuty_SGM3784_2(int duty);
+extern int FlashIc_Enable(void);
+extern int FlashIc_Disable(void);
+extern int m_duty1;	//add by lijin 2015.5.13
+extern int m_duty2;
+extern int LED2Closeflag;
 static int FL_Enable(void)
 {
-	flashEnable_lm3643_2();
+    flashEnable_SGM3784_2();
+	PK_DBG("FL_Enable-");
 	return 0;
 }
 
 static int FL_Disable(void)
 {
-	flashDisable_lm3643_2();
+    flashDisable_SGM3784_2();
 	return 0;
 }
 
 static int FL_dim_duty(kal_uint32 duty)
 {
-	setDuty_lm3643_2(duty);
+    setDuty_SGM3784_2(duty);
 	return 0;
 }
 
@@ -186,7 +195,7 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
 
 	case FLASH_IOC_SET_DUTY:
 		PK_DBG("FLASHLIGHT_DUTY: %d\n", (int)arg);
-		FL_dim_duty(arg);
+			m_duty2 = arg;
 		break;
 
 
@@ -204,8 +213,17 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
 				ktime = ktime_set(0, g_timeOutTimeMs * 1000000);
 				hrtimer_start(&g_timeOutTimer, ktime, HRTIMER_MODE_REL);
 			}
+			LED2Closeflag = 0;
+			FlashIc_Enable();
+flashEnable_SGM3784_2();
+			FL_dim_duty(m_duty2);
 			FL_Enable();
-		} else {
+    		}
+    		else
+    		{
+    			LED2Closeflag = 1;
+			FlashIc_Enable();
+			FL_dim_duty(m_duty2);
 			FL_Disable();
 			hrtimer_cancel(&g_timeOutTimer);
 		}

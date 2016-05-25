@@ -898,26 +898,26 @@ static struct platform_driver flashlight_platform_driver = {
 #endif
 		   },
 };
-
+/*
 static struct platform_device flashlight_platform_device = {
 	.name = FLASHLIGHT_DEVNAME,
 	.id = 0,
 	.dev = {
 		}
 };
-
+*/
 static int __init flashlight_init(void)
 {
 	int ret = 0;
 
 	logI("[flashlight_probe] start ~");
-
+/*
 	ret = platform_device_register(&flashlight_platform_device);
 	if (ret) {
 		logI("[flashlight_probe] platform_device_register fail ~");
 		return ret;
 	}
-
+*/
 	ret = platform_driver_register(&flashlight_platform_driver);
 	if (ret) {
 		logI("[flashlight_probe] platform_driver_register fail ~");
