@@ -110,8 +110,8 @@ u32 pinSet[3][8] = {
 
 PowerCust PowerCustList = {
 	{
-	 {GPIO_SUPPORTED, GPIO_MODE_GPIO, Vol_High},	/* for AVDD; */
-	 {GPIO_SUPPORTED, GPIO_MODE_GPIO, Vol_High},	/* for DVDD; */
+	 {GPIO_UNSUPPORTED, GPIO_MODE_GPIO, Vol_High},	/* for AVDD; */
+	 {GPIO_UNSUPPORTED, GPIO_MODE_GPIO, Vol_High},	/* for DVDD; */
 	 {GPIO_UNSUPPORTED, GPIO_MODE_GPIO, Vol_Low},	/* for DOVDD; */
 	 {GPIO_UNSUPPORTED, GPIO_MODE_GPIO, Vol_Low},	/* for AFVDD; */
 	 {GPIO_UNSUPPORTED, GPIO_MODE_GPIO, Vol_Low},	/* for SUB_AVDD; */
@@ -711,7 +711,7 @@ BOOL hwpoweron(PowerInformation pwInfo, char *mode_name)
 					pwInfo.Voltage = Vol_1210;
 					PK_DBG("[CAMERA SENSOR] Sub camera VCAM_D power 1.2V to 1.21V\n");
 				}
-				if (TRUE != _hwPowerOn(DVDD, pwInfo.Voltage)) {
+				if (TRUE != _hwPowerOn(SUB_DVDD, pwInfo.Voltage)) {
 					PK_ERR("[CAMERA SENSOR] Fail to enable digital power\n");
 					return FALSE;
 				}

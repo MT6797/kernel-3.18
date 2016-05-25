@@ -58,15 +58,15 @@
 
 #define BYTE               unsigned char
 
-static BOOL read_spc_flag = FALSE;
+//static BOOL read_spc_flag = FALSE;
 
 
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
 
-static BYTE imx230_SPC_data[352]={0};
+//static BYTE imx230_SPC_data[352]={0};
 
-extern void read_imx230_SPC( BYTE* data );
-extern void read_imx230_DCC( kal_uint16 addr,BYTE* data, kal_uint32 size);
+//extern void read_imx230_SPC( BYTE* data );
+//extern void read_imx230_DCC( kal_uint16 addr,BYTE* data, kal_uint32 size);
 
 
 
@@ -95,7 +95,7 @@ static imgsensor_info_struct imgsensor_info = {
         .startx = 0,
         .starty = 0,
         .grabwindow_width = 5344,
-        .grabwindow_height =  4016,
+        .grabwindow_height = 4016,
         .mipi_data_lp2hs_settle_dc = 85,//unit , ns
         .max_framerate = 240,
     },
@@ -153,9 +153,9 @@ static imgsensor_info_struct imgsensor_info = {
     .ihdr_le_firstline = 0,  //1,le first ; 0, se first
     .sensor_mode_num = 5,      //support sensor mode num
 
-    .cap_delay_frame = 1,        //enter capture delay frame num
-    .pre_delay_frame = 1,         //enter preview delay frame num
-    .video_delay_frame = 1,        //enter video delay frame num
+    .cap_delay_frame = 3,        //enter capture delay frame num
+    .pre_delay_frame = 3,         //enter preview delay frame num
+    .video_delay_frame = 3,        //enter video delay frame num
     .hs_video_delay_frame = 3,    //enter high speed video  delay frame num
     .slim_video_delay_frame = 3,//enter slim video delay frame num
 
@@ -195,20 +195,20 @@ static SENSOR_WINSIZE_INFO_STRUCT imgsensor_winsize_info[5] =
  { 5344, 4016,    0,  504, 5344, 3006, 1280,  720, 0000, 0000, 1280,  720,      0,    0, 1280,  720}};// slim video
 
  /*VC1 for HDR(DT=0X35) , VC2 for PDAF(DT=0X36), unit : 10bit*/
- static SENSOR_VC_INFO_STRUCT SENSOR_VC_INFO[3]=
- {/* Preview mode setting */
- {0x03, 0x0a,   0x00,   0x08, 0x40, 0x00,
-  0x00, 0x2b, 0x0A70, 0x07D8, 0x00, 0x35, 0x0280, 0x0001,
-  0x00, 0x36, 0x0C48, 0x0001, 0x03, 0x00, 0x0000, 0x0000},
+ //static SENSOR_VC_INFO_STRUCT SENSOR_VC_INFO[3]=
+ //{/* Preview mode setting */
+ //{0x03, 0x0a,   0x00,   0x08, 0x40, 0x00,
+ // 0x00, 0x2b, 0x0A70, 0x07D8, 0x00, 0x35, 0x0280, 0x0001,
+ // 0x00, 0x36, 0x0C48, 0x0001, 0x03, 0x00, 0x0000, 0x0000},
   /* Capture mode setting */
-  {0x03, 0x0a,	 0x00,	 0x08, 0x40, 0x00,
-   0x00, 0x2b, 0x14E0, 0x0FB0, 0x00, 0x35, 0x0280, 0x0001,
-  0x00, 0x36, 0x1a18, 0x0001, 0x03, 0x00, 0x0000, 0x0000},
+ // {0x03, 0x0a,	 0x00,	 0x08, 0x40, 0x00,
+  // 0x00, 0x2b, 0x14E0, 0x0FB0, 0x00, 0x35, 0x0280, 0x0001,
+  //0x00, 0x36, 0x1a18, 0x0001, 0x03, 0x00, 0x0000, 0x0000},
    /* Video mode setting */
-  {0x02, 0x0a,	 0x00,	 0x08, 0x40, 0x00,
-   0x00, 0x2b, 0x14E0, 0x0FB0, 0x00, 0x35, 0x0280, 0x0001,
-   0x02, 0x00, 0x0000, 0x0000, 0x03, 0x00, 0x0000, 0x0000}
-};
+  //{0x02, 0x0a,	 0x00,	 0x08, 0x40, 0x00,
+  // 0x00, 0x2b, 0x14E0, 0x0FB0, 0x01, 0x00, 0x0000, 0x0000,
+  // 0x02, 0x00, 0x0000, 0x0000, 0x03, 0x00, 0x0000, 0x0000}
+//};
 
 typedef struct
 {
@@ -394,7 +394,7 @@ static kal_uint32 imx230_ATR(UINT16 DarkLimit, UINT16 OverExp)
                                                      */
     return ERROR_NONE;
 }
-#endif
+#endif/*
 static MUINT32 cur_startpos = 0;
 static MUINT32 cur_size = 0;
 
@@ -413,7 +413,7 @@ static void imx230_set_pd_focus_area(MUINT32 startpos, MUINT32 size)
 		cur_startpos = startpos;
 		cur_size = size;
 	}
-
+	
 	start_x_pos = (startpos >> 16) & 0xFFFF;
 	start_y_pos = startpos & 0xFFFF;
 	focus_width = (size >> 16) & 0xFFFF;
@@ -424,34 +424,34 @@ static void imx230_set_pd_focus_area(MUINT32 startpos, MUINT32 size)
 
 	if(imgsensor.pdaf_mode == 1)
 	{
-		LOG_INF("GC pre PDAF\n");
+		LOG_INF("GC pre PDAF\n");*/
 		/*PDAF*/
 		/*PD_CAL_ENALBE*/
-		write_cmos_sensor(0x3121,0x01);
+	//	write_cmos_sensor(0x3121,0x01);
 		/*AREA MODE*/
-		write_cmos_sensor(0x31B0,0x02);// 8x6 output
-		write_cmos_sensor(0x31B4,0x01);// 8x6 output
+		//write_cmos_sensor(0x31B0,0x02);// 8x6 output
+		//write_cmos_sensor(0x31B4,0x01);// 8x6 output
 		/*PD_OUT_EN=1*/
-		write_cmos_sensor(0x3123,0x01);
+	//	write_cmos_sensor(0x3123,0x01);
 
 		/*Fixed area mode*/
-
+	/*	
 		write_cmos_sensor(0x3158,(start_x_pos >> 8) & 0xFF);
 		write_cmos_sensor(0x3159,start_x_pos & 0xFF);// X start
 		write_cmos_sensor(0x315a,(start_y_pos >> 8) & 0xFF);
 		write_cmos_sensor(0x315b,start_y_pos & 0xFF);// Y start
 		write_cmos_sensor(0x315c,(end_x_pos >> 8) & 0xFF);
-		write_cmos_sensor(0x315d,end_x_pos & 0xFF);//X end
+		write_cmos_sensor(0x315d,end_x_pos & 0xFF);//X end 
 		write_cmos_sensor(0x315e,(end_y_pos >> 8) & 0xFF);
 		write_cmos_sensor(0x315f,end_y_pos & 0xFF);// Y end
 
-
+		
 	}
 
 
 	LOG_INF("start_x_pos:%d, start_y_pos:%d, focus_width:%d, focus_height:%d, end_x_pos:%d, end_y_pos:%d\n", \
 			start_x_pos, start_y_pos, focus_width, focus_height, end_x_pos, end_y_pos);
-
+	
 	return;
 }
 
@@ -476,7 +476,7 @@ static void imx230_apply_SPC(void)
 	}
 
 }
-
+*/
 static void set_dummy(void)
 {
     LOG_INF("dummyline = %d, dummypixels = %d \n", imgsensor.dummy_line, imgsensor.dummy_pixel);
@@ -667,12 +667,8 @@ static kal_uint16 set_gain(kal_uint16 gain)
     LOG_INF("gain = %d , reg_gain = 0x%x\n ", gain, reg_gain);
 
 	write_cmos_sensor(0x0104, 0x01);
-    /* Global analog Gain for Long expo*/
     write_cmos_sensor(0x0204, (reg_gain>>8)& 0xFF);
-    write_cmos_sensor(0x0205, reg_gain & 0xFF);
-    /* Global analog Gain for Short expo*/
-    write_cmos_sensor(0x0216, (reg_gain>>8)& 0xFF);
-    write_cmos_sensor(0x0217, reg_gain & 0xFF);
+	write_cmos_sensor(0x0205, reg_gain & 0xFF);
     write_cmos_sensor(0x0104, 0x00);
 
     return gain;
@@ -683,7 +679,6 @@ static void ihdr_write_shutter_gain(kal_uint16 le, kal_uint16 se, kal_uint16 gai
 
     kal_uint16 realtime_fps = 0;
     kal_uint16 reg_gain;
-    kal_uint16 ratio;
     LOG_INF("le:0x%x, se:0x%x, gain:0x%x\n",le,se,gain);
     spin_lock(&imgsensor_drv_lock);
     if (le > imgsensor.min_frame_length - imgsensor_info.margin)
@@ -719,17 +714,6 @@ static void ihdr_write_shutter_gain(kal_uint16 le, kal_uint16 se, kal_uint16 gai
     /* Short exposure */
     write_cmos_sensor(0x0224, (se >> 8) & 0xFF);
     write_cmos_sensor(0x0225, se  & 0xFF);
-    /* Ratio */
-    if(se == 0)
-        ratio = 2;
-    else {
-        ratio = (le+ (se >> 1)) / se;
-        if(ratio > 16)
-            ratio = 2;
-    }
-    LOG_INF("le:%d, se:%d, ratio:%d\n",le,se, ratio);
-    write_cmos_sensor(0x0222,ratio);
-
     reg_gain = gain2reg(gain);
     spin_lock(&imgsensor_drv_lock);
     imgsensor.gain = reg_gain;
@@ -741,62 +725,6 @@ static void ihdr_write_shutter_gain(kal_uint16 le, kal_uint16 se, kal_uint16 gai
     write_cmos_sensor(0x0216, (reg_gain>>8)& 0xFF);
     write_cmos_sensor(0x0217, reg_gain & 0xFF);
     write_cmos_sensor(0x0104, 0x00);
-
-}
-
-static void hdr_write_shutter(kal_uint16 le, kal_uint16 se)
-{
-    kal_uint16 realtime_fps = 0;
-    kal_uint16 ratio;
-    LOG_INF("le:0x%x, se:0x%x\n",le,se);
-    spin_lock(&imgsensor_drv_lock);
-    if (le > imgsensor.min_frame_length - imgsensor_info.margin)
-        imgsensor.frame_length = le + imgsensor_info.margin;
-    else
-        imgsensor.frame_length = imgsensor.min_frame_length;
-    if (imgsensor.frame_length > imgsensor_info.max_frame_length)
-        imgsensor.frame_length = imgsensor_info.max_frame_length;
-    spin_unlock(&imgsensor_drv_lock);
-    if (le < imgsensor_info.min_shutter) le = imgsensor_info.min_shutter;
-    if (imgsensor.autoflicker_en) {
-        realtime_fps = imgsensor.pclk / imgsensor.line_length * 10 / imgsensor.frame_length;
-        if(realtime_fps >= 297 && realtime_fps <= 305)
-            set_max_framerate(296,0);
-        else if(realtime_fps >= 147 && realtime_fps <= 150)
-            set_max_framerate(146,0);
-        else {
-        write_cmos_sensor(0x0104, 0x01);
-        write_cmos_sensor(0x0340, imgsensor.frame_length >> 8);
-        write_cmos_sensor(0x0341, imgsensor.frame_length & 0xFF);
-        write_cmos_sensor(0x0104, 0x00);
-        }
-    } else {
-        write_cmos_sensor(0x0104, 0x01);
-        write_cmos_sensor(0x0340, imgsensor.frame_length >> 8);
-        write_cmos_sensor(0x0341, imgsensor.frame_length & 0xFF);
-        write_cmos_sensor(0x0104, 0x00);
-    }
-    write_cmos_sensor(0x0104, 0x01);
-
-    /* Long exposure */
-    write_cmos_sensor(0x0202, (le >> 8) & 0xFF);
-    write_cmos_sensor(0x0203, le  & 0xFF);
-    /* Short exposure */
-    write_cmos_sensor(0x0224, (se >> 8) & 0xFF);
-    write_cmos_sensor(0x0225, se  & 0xFF);
-    write_cmos_sensor(0x0104, 0x00);
-
-    /* Ratio */
-    if(se == 0)
-        ratio = 2;
-    else {
-        ratio = (le+ (se >> 1)) / se;
-        if(ratio > 16)
-            ratio = 2;
-    }
-
-    LOG_INF("le:%d, se:%d, ratio:%d\n",le,se, ratio);
-    write_cmos_sensor(0x0222,ratio);
 
 }
 
@@ -1394,7 +1322,7 @@ static void preview_setting_HDR_ES2(void)
 	write_cmos_sensor(0x0114,0x03);
 	write_cmos_sensor(0x0220,0x03);
 	write_cmos_sensor(0x0221,0x22);
-	write_cmos_sensor(0x0222,0x02);//0x10,modify to 2x ratio
+	write_cmos_sensor(0x0222,0x10);
 	write_cmos_sensor(0x0340,0x08);
 	write_cmos_sensor(0x0341,0x3C);
 	write_cmos_sensor(0x0342,0x17);
@@ -1765,7 +1693,7 @@ static void capture_setting_HDR_ES2(void)
 	write_cmos_sensor(0x0114,0x03);
 	write_cmos_sensor(0x0220,0x03);
 	write_cmos_sensor(0x0221,0x11);
-	write_cmos_sensor(0x0222,0x02);//0x10,modify to 2x ratio
+	write_cmos_sensor(0x0222,0x08);
 	write_cmos_sensor(0x0340,0x10);
 	write_cmos_sensor(0x0341,0x1E);
 	write_cmos_sensor(0x0342,0x17);
@@ -2127,7 +2055,7 @@ static void capture_setting_pdaf(kal_uint16 currefps)
 
     /*Fixed area mode*/
 	/*Fixed area mode*/
-
+	
 	write_cmos_sensor(0x3158,0x06);
 	write_cmos_sensor(0x3159,0x45);// X start = 1605
 	write_cmos_sensor(0x315a,0x04);
@@ -2135,7 +2063,7 @@ static void capture_setting_pdaf(kal_uint16 currefps)
 	write_cmos_sensor(0x315c,0x0E);
 	write_cmos_sensor(0x315d,0x9B);//X end = 3739
 	write_cmos_sensor(0x315e,0x0A);
-	write_cmos_sensor(0x315f,0xFB);// Y end = 2811
+	write_cmos_sensor(0x315f,0xFB);// Y end = 2811	
 
 	write_cmos_sensor(0x0100,0x01);
 }
@@ -2257,123 +2185,6 @@ write_cmos_sensor(0x3013,0x01);
 	write_cmos_sensor(0x0100,0x01);
 
 }
-
-static void normal_video_setting_30fps_HDR(void)
-{
-    LOG_INF("E\n");
-	write_cmos_sensor(0x0100,0x00);
-
-	write_cmos_sensor(0x0114,0x03);
-	write_cmos_sensor(0x0220,0x03);
-	write_cmos_sensor(0x0221,0x11);
-	write_cmos_sensor(0x0222,0x02);//0x10,modify to 2x ratio
-	write_cmos_sensor(0x0340,0x0C);
-	write_cmos_sensor(0x0341,0x30);
-	write_cmos_sensor(0x0342,0x17);
-	write_cmos_sensor(0x0343,0x88);
-	write_cmos_sensor(0x0344,0x00);
-	write_cmos_sensor(0x0345,0x00);
-	write_cmos_sensor(0x0346,0x01);
-	write_cmos_sensor(0x0347,0xF8);
-	write_cmos_sensor(0x0348,0x14);
-	write_cmos_sensor(0x0349,0xDF);
-	write_cmos_sensor(0x034A,0x0D);
-	write_cmos_sensor(0x034B,0xB7);
-	write_cmos_sensor(0x0381,0x01);
-	write_cmos_sensor(0x0383,0x01);
-	write_cmos_sensor(0x0385,0x01);
-	write_cmos_sensor(0x0387,0x01);
-	write_cmos_sensor(0x0900,0x00);
-	write_cmos_sensor(0x0901,0x11);
-	write_cmos_sensor(0x0902,0x00);
-	write_cmos_sensor(0x3000,0x75);
-	write_cmos_sensor(0x3001,0x00);
-	write_cmos_sensor(0x305C,0x11);
-	
-	write_cmos_sensor(0x0112,0x0A);
-	write_cmos_sensor(0x0113,0x0A);
-	write_cmos_sensor(0x034C,0x14);
-	write_cmos_sensor(0x034D,0xE0);
-	write_cmos_sensor(0x034E,0x0B);
-	write_cmos_sensor(0x034F,0xBE);
-	write_cmos_sensor(0x0401,0x00);
-	write_cmos_sensor(0x0404,0x00);
-	write_cmos_sensor(0x0405,0x10);
-	write_cmos_sensor(0x0408,0x00);
-	write_cmos_sensor(0x0409,0x00);
-	write_cmos_sensor(0x040A,0x00);
-	write_cmos_sensor(0x040B,0x02);
-	write_cmos_sensor(0x040C,0x14);
-	write_cmos_sensor(0x040D,0xE0);
-	write_cmos_sensor(0x040E,0x0B);
-	write_cmos_sensor(0x040F,0xBE);
-	
-	write_cmos_sensor(0x0301,0x04);
-	write_cmos_sensor(0x0303,0x02);
-	write_cmos_sensor(0x0305,0x04);
-	write_cmos_sensor(0x0306,0x00);
-	write_cmos_sensor(0x0307,0xBC);
-	write_cmos_sensor(0x0309,0x0A);
-	write_cmos_sensor(0x030B,0x01);
-	write_cmos_sensor(0x030D,0x0C);
-	write_cmos_sensor(0x030E,0x02);
-	write_cmos_sensor(0x030F,0x99);
-	write_cmos_sensor(0x0310,0x01);
-	
-	write_cmos_sensor(0x0820,0x14);
-	write_cmos_sensor(0x0821,0xC8);
-	write_cmos_sensor(0x0822,0x00);
-	write_cmos_sensor(0x0823,0x00);
-	
-	write_cmos_sensor(0x0202,0x0C);
-	write_cmos_sensor(0x0203,0x26);
-	write_cmos_sensor(0x0224,0x0C);
-	write_cmos_sensor(0x0225,0x26);
-	
-	write_cmos_sensor(0x0204,0x00);
-	write_cmos_sensor(0x0205,0x00);
-	write_cmos_sensor(0x0216,0x00);
-	write_cmos_sensor(0x0217,0x00);
-	write_cmos_sensor(0x020E,0x01);
-	write_cmos_sensor(0x020F,0x00);
-	write_cmos_sensor(0x0210,0x01);
-	write_cmos_sensor(0x0211,0x00);
-	write_cmos_sensor(0x0212,0x01);
-	write_cmos_sensor(0x0213,0x00);
-	write_cmos_sensor(0x0214,0x01);
-	write_cmos_sensor(0x0215,0x00);
-	
-	write_cmos_sensor(0x3006,0x01);
-	write_cmos_sensor(0x3007,0x01);
-	write_cmos_sensor(0x31E0,0x3F);
-	write_cmos_sensor(0x31E1,0xFF);
-	write_cmos_sensor(0x31E4,0x02);
-	
-	write_cmos_sensor(0x3A23,0x14);
-	write_cmos_sensor(0x3A24,0xE0);
-	write_cmos_sensor(0x3A25,0x0B);
-	write_cmos_sensor(0x3A26,0xC0);
-	write_cmos_sensor(0x3A2F,0x00);
-	write_cmos_sensor(0x3A30,0x00);
-	write_cmos_sensor(0x3A31,0x01);
-	write_cmos_sensor(0x3A32,0xF8);
-	write_cmos_sensor(0x3A33,0x14);
-	write_cmos_sensor(0x3A34,0xDF);
-	write_cmos_sensor(0x3A35,0x0D);
-	write_cmos_sensor(0x3A36,0xB7);
-	write_cmos_sensor(0x3A37,0x00);
-	write_cmos_sensor(0x3A38,0x00);
-	write_cmos_sensor(0x3A39,0x00);
-	
-	write_cmos_sensor(0x3A21,0x02);
-	
-	write_cmos_sensor(0x3011,0x00);
-	write_cmos_sensor(0x3013,0x01);
-
-	write_cmos_sensor(0x0100,0x01);
-
-}
-
 static void hs_video_setting(void)
 {
     LOG_INF("E\n");
@@ -2667,7 +2478,7 @@ static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
         *sensor_id = 0xFFFFFFFF;
         return ERROR_SENSOR_CONNECT_FAIL;
     }
-	imx230_apply_SPC();
+	//imx230_apply_SPC();
 
     return ERROR_NONE;
 }
@@ -2867,10 +2678,7 @@ static kal_uint32 normal_video(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
     //imgsensor.current_fps = 300;
     imgsensor.autoflicker_en = KAL_FALSE;
     spin_unlock(&imgsensor_drv_lock);
-	if(imgsensor.ihdr_mode == 2)
-		normal_video_setting_30fps_HDR();
-	else
-    	normal_video_setting(imgsensor.current_fps);
+    normal_video_setting(imgsensor.current_fps);
 	//set_mirror_flip(sensor_config_data->SensorImageMirror);
     return ERROR_NONE;
 }    /*    normal_video   */
@@ -2979,8 +2787,7 @@ static kal_uint32 get_info(MSDK_SCENARIO_ID_ENUM scenario_id,
     sensor_info->IHDR_Support = imgsensor_info.ihdr_support;
     sensor_info->IHDR_LE_FirstLine = imgsensor_info.ihdr_le_firstline;
     sensor_info->SensorModeNum = imgsensor_info.sensor_mode_num;
-	sensor_info->PDAF_Support = 2; /*0: NO PDAF, 1: PDAF Raw Data mode, 2:PDAF VC mode*/
-	sensor_info->HDR_Support = 2; /*0: NO HDR, 1: iHDR, 2:mvHDR, 3:zHDR*/
+	//sensor_info->PDAF_Support = 2; /*0: NO PDAF, 1: PDAF Raw Data mode, 2:PDAF VC mode*/
 
     sensor_info->SensorMIPILaneNumber = imgsensor_info.mipi_lane_num;
     sensor_info->SensorClockFreq = imgsensor_info.mclk;
@@ -3218,12 +3025,12 @@ static kal_uint32 get_default_framerate_by_scenario(MSDK_SCENARIO_ID_ENUM scenar
     return ERROR_NONE;
 }
 
-
+/*
 static kal_uint32 imx230_awb_gain(SET_SENSOR_AWB_GAIN *pSetSensorAWB)
 {
     UINT32 rgain_32, grgain_32, gbgain_32, bgain_32;
 	  LOG_INF("imx230_awb_gain\n");
-
+    
     grgain_32 = (pSetSensorAWB->ABS_GAIN_GR << 8) >> 9;
     rgain_32 = (pSetSensorAWB->ABS_GAIN_R << 8) >> 9;
     bgain_32 = (pSetSensorAWB->ABS_GAIN_B << 8) >> 9;
@@ -3244,7 +3051,7 @@ static kal_uint32 imx230_awb_gain(SET_SENSOR_AWB_GAIN *pSetSensorAWB)
     write_cmos_sensor(0x0b95, gbgain_32 & 0xFF);
     return ERROR_NONE;
 }
-
+*/
 
 static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
                              UINT8 *feature_para,UINT32 *feature_para_len)
@@ -3257,8 +3064,8 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 	//unsigned long long *feature_return_data = (unsigned long long*)feature_para;
 
     SENSOR_WINSIZE_INFO_STRUCT *wininfo;
-    SENSOR_VC_INFO_STRUCT *pvcinfo;
-    SET_SENSOR_AWB_GAIN *pSetSensorAWB=(SET_SENSOR_AWB_GAIN *)feature_para;
+    //SENSOR_VC_INFO_STRUCT *pvcinfo;
+    //SET_SENSOR_AWB_GAIN *pSetSensorAWB=(SET_SENSOR_AWB_GAIN *)feature_para;
     MSDK_SENSOR_REG_INFO_STRUCT *sensor_reg_data=(MSDK_SENSOR_REG_INFO_STRUCT *) feature_para;
 
     LOG_INF("feature_id = %d\n", feature_id);
@@ -3314,7 +3121,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 			break;
 		case SENSOR_FEATURE_GET_PDAF_DATA:
 			LOG_INF("SENSOR_FEATURE_GET_PDAF_DATA\n");
-			read_imx230_DCC((kal_uint16 )(*feature_data),(char*)(uintptr_t)(*(feature_data+1)),(kal_uint32)(*(feature_data+2)));
+			//read_imx230_DCC((kal_uint16 )(*feature_data),(char*)(uintptr_t)(*(feature_data+1)),(kal_uint32)(*(feature_data+2)));
             break;
         case SENSOR_FEATURE_SET_TEST_PATTERN:
             set_test_pattern_mode((BOOL)*feature_data);
@@ -3363,7 +3170,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
             LOG_INF("SENSOR_SET_SENSOR_IHDR LE=%d, SE=%d, Gain=%d\n",(UINT16)*feature_data,(UINT16)*(feature_data+1),(UINT16)*(feature_data+2));
             ihdr_write_shutter_gain(*feature_data,*(feature_data+1),*(feature_data+2));
             break;
-		case SENSOR_FEATURE_GET_VC_INFO:
+		/*case SENSOR_FEATURE_GET_VC_INFO:
             LOG_INF("SENSOR_FEATURE_GET_VC_INFO %d\n", (UINT16)*feature_data);
             pvcinfo = (SENSOR_VC_INFO_STRUCT *)(uintptr_t)(*(feature_data+1));
             switch (*feature_data_32) {
@@ -3381,10 +3188,10 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
             break;
 		case SENSOR_FEATURE_SET_AWB_GAIN:
             imx230_awb_gain(pSetSensorAWB);
-            break;
+            break;*/
 		/*END OF HDR CMD*/
 		/*PDAF CMD*/
-		case SENSOR_FEATURE_GET_SENSOR_PDAF_CAPACITY:
+		/*case SENSOR_FEATURE_GET_SENSOR_PDAF_CAPACITY:
 			LOG_INF("SENSOR_FEATURE_GET_SENSOR_PDAF_CAPACITY scenarioId:%llu\n", *feature_data);
 			//PDAF capacity enable or not, 2p8 only full size support PDAF
 			switch (*feature_data) {
@@ -3411,16 +3218,12 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 		case SENSOR_FEATURE_SET_PDAF:
 			LOG_INF("PDAF mode :%d\n", *feature_data_16);
 			imgsensor.pdaf_mode= *feature_data_16;
-			break;
+			break;*/
 		/*End of PDAF*/
-		case SENSOR_FEATURE_SET_PDFOCUS_AREA:
+		/*case SENSOR_FEATURE_SET_PDFOCUS_AREA:
             LOG_INF("SENSOR_FEATURE_SET_IMX230_PDFOCUS_AREA Start Pos=%d, Size=%d\n",(UINT32)*feature_data,(UINT32)*(feature_data+1));
             imx230_set_pd_focus_area(*feature_data,*(feature_data+1));
-			break;
-		case SENSOR_FEATURE_SET_HDR_SHUTTER:
-            LOG_INF("SENSOR_FEATURE_SET_HDR_SHUTTER LE=%d, SE=%d\n",(UINT16)*feature_data,(UINT16)*(feature_data+1));
-            hdr_write_shutter((UINT16)*feature_data,(UINT16)*(feature_data+1));
-            break;
+			break;*/
         default:
             break;
     }
