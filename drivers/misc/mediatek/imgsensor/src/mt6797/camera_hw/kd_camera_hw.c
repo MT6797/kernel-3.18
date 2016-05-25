@@ -167,12 +167,12 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0},
 	   },
 	  },
-	 {SENSOR_DRVNAME_S5K5E2YA_MIPI_RAW,
+	 {SENSOR_DRVNAME_S5K5E8YX_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
 	   {DOVDD, Vol_1800, 0},
 	   {AVDD, Vol_2800, 0},
-	   {DVDD, Vol_1200, 0},
+	   {DVDD, Vol_1220, 0},
 	   {AFVDD, Vol_2800, 5},
 	   {PDN, Vol_Low, 4},
 	   {PDN, Vol_High, 0},
@@ -708,7 +708,7 @@ BOOL hwpoweron(PowerInformation pwInfo, char *mode_name)
 			if (PowerCustList.PowerCustInfo[CUST_SUB_DVDD].Gpio_Pin == GPIO_UNSUPPORTED) {
 				PK_DBG("[CAMERA SENSOR] Sub camera VCAM_D power on");
 				if (pwInfo.Voltage == Vol_1200) {
-					pwInfo.Voltage = Vol_1210;
+					pwInfo.Voltage = Vol_1220;
 					PK_DBG("[CAMERA SENSOR] Sub camera VCAM_D power 1.2V to 1.21V\n");
 				}
 				if (TRUE != _hwPowerOn(SUB_DVDD, pwInfo.Voltage)) {
@@ -862,7 +862,7 @@ BOOL hwpowerdown(PowerInformation pwInfo, char *mode_name)
 				}
 			} else if (pinSetIdx == 1) {
 				if (PowerCustList.PowerCustInfo[CUST_SUB_DVDD].Gpio_Pin == GPIO_UNSUPPORTED) {
-					if (TRUE != _hwPowerDown(DVDD)) {
+					if (TRUE != _hwPowerDown(SUB_DVDD)) {
 						PK_ERR("[CAMERA SENSOR] Fail to enable digital power\n");
 						return FALSE;
 					}
