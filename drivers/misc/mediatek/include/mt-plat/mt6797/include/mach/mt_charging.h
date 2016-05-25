@@ -113,6 +113,10 @@
 /* Disable Battery check for HQA */
 #ifdef CONFIG_MTK_DISABLE_POWER_ON_OFF_VOLTAGE_LIMITATION
 #define CONFIG_DIS_CHECK_BATTERY
+#else
+	#ifndef USER_BUILD_KERNEL
+		#define CONFIG_DIS_CHECK_BATTERY
+	#endif
 #endif
 
 #ifdef CONFIG_MTK_FAN5405_SUPPORT
