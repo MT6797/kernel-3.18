@@ -1397,7 +1397,7 @@
 };
 
 /* LCM GPIO Kernal Standardization start */
-&lcm_mode {
+/*&lcm_mode {
 	pinctrl-names = "default", "lcm_mode_00", "lcm_mode_01", "lcm_mode_02", "lcm_mode_03", "lcm_mode_04",
 	 "lcm_mode_05", "lcm_mode_07";
 	pinctrl-0 = <&lcm_mode_default>;
@@ -1461,7 +1461,7 @@
 			pins = <PINMUX_GPIO65__FUNC_C2K_DM_EINT2>;
 		};
 	};
-};
+};*/
 /* LCM GPIO Kernal Standardization end */
 
 /* SPI GPIO standardization */
