@@ -995,7 +995,7 @@
 			interrupts = <GIC_SPI 179 IRQ_TYPE_EDGE_FALLING>;
 		};
 
-		bat_metter {
+		bat_metter:bat_metter {
 			compatible = "mediatek,bat_meter";
 			/* cust_charging.h */
 			/* stop charging while in talking mode */

@@ -1700,6 +1700,9 @@ static void battery_update(struct battery_data *bat_data)
 		bat_data->adjust_power = adjust_power;
 		battery_log(BAT_LOG_CRTI, "adjust_power=(%d)\n", adjust_power);
 	}
+	battery_log(BAT_LOG_CRTI,
+		    "[kernel][battery_update] SOC %d,UI_SOC2 %d, status %d\n",
+		    BMT_status.SOC, BMT_status.UI_SOC2, bat_data->BAT_STATUS);
 
 #ifdef DLPT_POWER_OFF_EN
 #ifndef DISABLE_DLPT_FEATURE
@@ -2605,6 +2608,7 @@ static void mt_battery_charger_detect_check(void)
 		wake_lock(&battery_suspend_lock);
 
 	BMT_status.charger_vol = battery_meter_get_charger_voltage();
+	battery_log(BAT_LOG_FULL,"[%s:%d]BMT_status.charger_vol = %d\n",__FUNCTION__,__LINE__,BMT_status.charger_vol);
 
 #if !defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
 		BMT_status.charger_exist = KAL_TRUE;
@@ -2730,6 +2734,7 @@ void update_battery_2nd_info(int status_smb, int capacity_smb, int present_smb)
 
 void do_chrdet_int_task(void)
 {
+	battery_log(BAT_LOG_FULL,"[%s %d]g_bat_init_flag = %d\n",__FUNCTION__,__LINE__,g_bat_init_flag);
 	if (g_bat_init_flag == KAL_TRUE) {
 #if !defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
 		if (upmu_is_chr_det() == KAL_TRUE) {
@@ -2791,6 +2796,7 @@ void do_chrdet_int_task(void)
 			}
 #endif
 #if defined(CONFIG_MTK_PUMP_EXPRESS_SUPPORT) || defined(CONFIG_MTK_PUMP_EXPRESS_PLUS_SUPPORT)
+			battery_log(BAT_LOG_FULL,"[%s %d]--------call dump_stack is_ta_connect = KAL_FALSE----------\n",__FUNCTION__,__LINE__);
 			is_ta_connect = KAL_FALSE;
 			ta_check_chr_type = KAL_TRUE;
 			ta_cable_out_occur = KAL_TRUE;
@@ -3594,7 +3600,7 @@ static int __batt_init_cust_data_from_dt(void)
 	struct device_node *np;
 
 	/* check customer setting */
-	np = of_find_compatible_node(NULL, NULL, "mediatek,battery");
+	np = of_find_compatible_node(NULL, NULL, "mediatek,bat_meter");
 	if (!np) {
 		/* printk(KERN_ERR "(E) Failed to find device-tree node: %s\n", path); */
 		battery_log(BAT_LOG_CRTI, "Failed to find device-tree node: bat_comm\n");

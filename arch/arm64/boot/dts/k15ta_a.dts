@@ -1643,3 +1643,21 @@
 	/* DA9214 GPIO Settings -End */
 };
 /* DA9214 GPIO End */
+
+/* cust_charging.h start*/
+&bat_metter {
+			usb_charger_current_suspend = <0 >;	/* Unit: 0.01 mA */
+			usb_charger_current_unconfigured = <7000 >;	/* Unit: 0.01 mA */
+			usb_charger_current_configured = <50000 >;	/* Unit: 0.01 mA */
+			usb_charger_current = <50000 >;	/* Unit: 0.01 mA */
+			ac_charger_current = <150000 >;	/* Unit: 0.01 mA */
+			non_std_ac_charger_current = <50000 >;	/* Unit: 0.01 mA */
+			charging_host_charger_current = <65000 >;	/* Unit: 0.01 mA */
+			apple_0_5a_charger_current = <50000 >;	/* Unit: 0.01 mA */
+			apple_1_0a_charger_current = <65000 >;	/* Unit: 0.01 mA */
+			apple_2_1a_charger_current = <80000 >;	/* Unit: 0.01 mA */
+			ta_ac_9v_input_current = <200000 >;	/* Unit: 0.01 mA */
+			ta_ac_7v_input_current = <320000 >;	/* Unit: 0.01 mA */
+			ta_ac_charging_current = <200000 >;	/* Unit: 0.01 mA */
+};
+/* cust_charging.h end*/
