@@ -84,7 +84,7 @@
 //#define CUST_EINT_FPS_EINT_NUM	CUST_EINT_FP_NUM	//5
 //#define TRIGGER_FPS_GPIO_PIN	GPIO_FP_EINT_PIN	//(GPIO5 | 0x80000000)
 
-#define P_GPIO_FPS_PWR_PIN  89
+#define P_GPIO_FPS_PWR_PIN  140//89
 
 #define FPC_BTP_SPI_CLOCK_SPEED			8*1000*1000
 #define MASS_READ_TRANSMITION_SIZE 2304
@@ -1188,7 +1188,7 @@ static int __init fp_probe(struct spi_device *spi)
 
 	gpio_set_value(GPIO_FPS_RESET_PIN, 1);
 	msleep(20);
-/*
+
 	ret = gpio_request(P_GPIO_FPS_PWR_PIN, "ars_pwr");
 	if (ret)
 		printk("[ars3022]  : gpio_request (%d)fail\n", P_GPIO_FPS_PWR_PIN);
@@ -1197,7 +1197,7 @@ static int __init fp_probe(struct spi_device *spi)
 	if (ret)
 		printk("[ars3022]gpio_direction_output (%d)fail\n",P_GPIO_FPS_PWR_PIN);
 
-	gpio_set_value(P_GPIO_FPS_PWR_PIN, 1);*/
+	gpio_set_value(P_GPIO_FPS_PWR_PIN, 1);
 	//mt_set_gpio_dir(GPIO_FPS_RESET_PIN, GPIO_DIR_OUT);
 	spin_lock_irq(&fp->spi_lock);
 	spi_initialize= spi_dev_get(fp->spi);
