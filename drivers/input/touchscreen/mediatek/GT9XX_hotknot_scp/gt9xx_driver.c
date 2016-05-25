@@ -22,7 +22,7 @@
 #endif
 #include <linux/sched.h>
 #include "gt9xx_config.h"
-
+#include <linux/i2c.h>
 
 #if TOUCH_FILTER
 static struct tpd_filter_t tpd_filter_local = TPD_FILTER_PARA;
@@ -760,7 +760,7 @@ int i2c_read_bytes_non_dma(struct i2c_client *client, u16 addr, u8 *rxbuf, int l
 	u8 retry;
 	u16 left = len;
 	u16 offset = 0;
-
+#ifdef CONFIG_MTK_I2C_EXTENSION
 	struct i2c_msg msg[2] = {
 		{
 		 .addr = ((client->addr & I2C_MASK_FLAG) | (I2C_ENEXT_FLAG)),
@@ -773,6 +773,18 @@ int i2c_read_bytes_non_dma(struct i2c_client *client, u16 addr, u8 *rxbuf, int l
 		 .flags = I2C_M_RD,
 		 .timing = I2C_MASTER_CLOCK},
 	};
+#else
+	struct i2c_msg msg[2] = {
+		{
+		 .addr = client->addr,
+		 .flags = 0,
+		 .buf = buffer,
+		 .len = GTP_ADDR_LENGTH},
+		{
+		 .addr = client->addr,
+		 .flags = I2C_M_RD},
+	};
+#endif
 
 	if (rxbuf == NULL)
 		return -1;
@@ -876,10 +888,9 @@ int i2c_write_bytes_non_dma(struct i2c_client *client, u16 addr, u8 *txbuf, int 
 	u8 retry = 0;
 
 	struct i2c_msg msg = {
-		.addr = ((client->addr & I2C_MASK_FLAG) | (I2C_ENEXT_FLAG)),
+		.addr = client->addr,
 		.flags = 0,
 		.buf = buffer,
-		.timing = I2C_MASTER_CLOCK,
 	};
 
 	if (txbuf == NULL)
@@ -2789,7 +2800,7 @@ Output:
 *******************************************************/
 static s8 gtp_enter_sleep(struct i2c_client *client)
 {
-	int ret;
+	int ret = 0;
 
 #if GTP_COMPATIBLE_MODE
 	if (CHIP_TYPE_GT9F == gtp_chip_type) {
