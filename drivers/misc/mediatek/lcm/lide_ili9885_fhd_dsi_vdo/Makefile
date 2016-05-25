@@ -16,7 +16,7 @@
 #
 
 
-obj-y += ili9885_fhd_dsi_vdo.o
+obj-y += lide_ili9885_fhd_dsi_vdo.o
 
 ccflags-$(CONFIG_MTK_LCM) += -I$(srctree)/drivers/misc/mediatek/lcm/inc
 

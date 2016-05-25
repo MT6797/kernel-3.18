@@ -41,8 +41,8 @@ LCM_DRIVER *lcm_driver_list[] = {
 	&nt35523_fhd_dsi_vdo_lcm_drv,
 
 #endif
-#if defined(ILI9885_FHD_DSI_VDO)
-	&ili9885_fhd_dsi_vdo_lcm_drv,
+#if defined(LIDE_ILI9885_FHD_DSI_VDO)
+	&lide_ili9885_fhd_dsi_vdo_lcm_drv,
 
 #endif
 };
