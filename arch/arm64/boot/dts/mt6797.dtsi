@@ -1011,7 +1011,7 @@
 			talking_sync_time = <60 >;
 			/* Battery Temperature Protection */
 			mtk_temperature_recharge_support = <1 >;
-			max_charge_temperature = <50 >;
+			max_charge_temperature = <55 >;
 			max_charge_temperature_minus_x_degree = <47 >;
 			min_charge_temperature = <0 >;
 			min_charge_temperature_plus_x_degree = <6 >;
