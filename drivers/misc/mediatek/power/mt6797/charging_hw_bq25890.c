@@ -269,6 +269,10 @@ static unsigned int charging_hw_init(void *data)
 	bq25890_config_interface(bq25890_CON6, 0x0, 0x1, 0);	/* recharge voltage@VRECHG=CV-100MV */
 	bq25890_config_interface(bq25890_CON7, 0x1, 0x1, 7);	/* disable ICHG termination detect */
 	bq25890_config_interface(bq25890_CON5, 0x1, 0x7, 0);	/* termianation current default 128mA */
+	#ifdef CONFIG_BATTERY_HIGH_VOLTAGE
+	if(CONFIG_BATTERY_HIGH_VOLTAGE == 4350)
+		bq25890_config_interface(bq25890_CON6, 0x1f, 0x3F, 2);//offset = 3.84V
+	#endif
 
 
 #if defined(MTK_WIRELESS_CHARGER_SUPPORT)
