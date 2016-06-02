@@ -369,7 +369,7 @@ static int LSM6DS0_gyro_SetPowerMode(struct i2c_client *client, bool enable)
 		return LSM6DS0_SUCCESS;
 	}
 
-	if(hwmsen_read_byte(client, LSM6DS0_CTRL2_G, databuf))
+	if(hwmsen_read_byte(client, LSM6DS0_CTRL1_XL, databuf))
 	{
 		GYRO_ERR("read lsm6ds0 power ctl register err!\n");
 		return LSM6DS0_ERR_I2C;
@@ -390,7 +390,7 @@ static int LSM6DS0_gyro_SetPowerMode(struct i2c_client *client, bool enable)
 		databuf[0] |= LSM6DS0_GYRO_ODR_POWER_DOWN; //POWER DOWN
 	}
 	databuf[1] = databuf[0];
-	databuf[0] = LSM6DS0_CTRL2_G;	 
+	databuf[0] = LSM6DS0_CTRL1_XL;	 
 	res = i2c_master_send(client, databuf, 0x2);
 	if(res <= 0)
 	{

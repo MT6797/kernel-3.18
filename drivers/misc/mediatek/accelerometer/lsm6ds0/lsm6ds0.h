@@ -1,5 +1,5 @@
 /* lsm6ds0.h
- *
+  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -14,8 +14,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef LSM6DS0_H
-#define LSM6DS0_H
+#ifndef LSM6DS0_GY_H
+#define LSM6DS0_GY_H
 	 
 #include <linux/ioctl.h>
 	 
@@ -25,7 +25,6 @@
 
 /* LSM6DS0 Register Map  (Please refer to LSM6DS0 Specifications) */
 #define LSM6DS0_FUNC_CFG_ACCESS  0x00
-#define LSM6DS0_RAM_ACCESS  	0X01
 #define LSM6DS0_SENSOR_SYNC_TIME_FRAME 0X04
 
 /*FIFO control register*/
@@ -39,7 +38,7 @@
 #define LSM6DS0_ORIENT_CFG_G 0x0B
 
 /*Interrupt control*/
-#define LSM6DS0_INT1_CTRL 0x0D
+#define LSM6DS0_INT1_CTRL 0x0C//0x0D
 #define LSM6DS0_INT2_CTRL 0x0E
 
 #define LSM6DS0_WHO_AM_I 0x0F
@@ -48,13 +47,13 @@
 #define LSM6DS0_CTRL1_XL 0x10
 #define LSM6DS0_CTRL2_G 0x11
 #define LSM6DS0_CTRL3_C	0x12
-#define LSM6DS0_CTRL4_C	0x13
-#define LSM6DS0_CTRL5_C	0x14
-#define LSM6DS0_CTRL6_C	0x15
-#define LSM6DS0_CTRL7_G	0x16
-#define LSM6DS0_CTRL8_XL	0x17
-#define LSM6DS0_CTRL9_XL	0x18
-#define LSM6DS0_CTRL10_C	0x19
+#define LSM6DS0_CTRL4_C	0x1E//0x13
+#define LSM6DS0_CTRL5_C	0x1f//0x14
+#define LSM6DS0_CTRL6_C	0x20//0x15
+#define LSM6DS0_CTRL7_G	0x21//0x16
+#define LSM6DS0_CTRL8_XL	0x22//0x17
+#define LSM6DS0_CTRL9_XL	0x23//0x18
+#define LSM6DS0_CTRL10_C	0x24//0x19
 
 #define LSM6DS0_MASTER_CONFIG 0x1A
 #define LSM6DS0_WAKE_UP_SRC 0x1B
@@ -65,19 +64,19 @@
 /*Output register*/
 #define LSM6DS0_OUT_TEMP_L 0x20
 #define LSM6DS0_OUT_TEMP_H 0x21
-#define LSM6DS0_OUTX_L_G   0x22
-#define LSM6DS0_OUTX_H_G   0x23
-#define LSM6DS0_OUTY_L_G   0x24
-#define LSM6DS0_OUTY_H_G   0x25
-#define LSM6DS0_OUTZ_L_G   0x26
-#define LSM6DS0_OUTZ_H_G   0x27
+#define LSM6DS0_OUTX_L_G   0x18
+#define LSM6DS0_OUTX_H_G   0x19
+#define LSM6DS0_OUTY_L_G   0x1A//0x24
+#define LSM6DS0_OUTY_H_G   0x1B//0x25
+#define LSM6DS0_OUTZ_L_G   0x1C//0x26
+#define LSM6DS0_OUTZ_H_G   0x1D//0x27
 
 #define LSM6DS0_OUTX_L_XL   0x28
 #define LSM6DS0_OUTX_H_XL   0x29
-#define LSM6DS0_OUTY_L_XL   0x2A
-#define LSM6DS0_OUTY_H_XL   0x2B
-#define LSM6DS0_OUTZ_L_XL   0x2C
-#define LSM6DS0_OUTZ_H_XL   0x2D
+#define LSM6DS0_OUTY_L_XL   0x1A//0x2A
+#define LSM6DS0_OUTY_H_XL   0x1B//0x2B
+#define LSM6DS0_OUTZ_L_XL   0x1C//0x2C
+#define LSM6DS0_OUTZ_H_XL   0x1D//0x2D
 
 /*Sensor Hub registers*/
 #define LSM6DS0_SENSORHUB1_REG 0x2E
@@ -244,91 +243,6 @@
 #define LSM6DS0_GYRO_ENABLE_AXIS_Y 0x10
 #define LSM6DS0_GYRO_ENABLE_AXIS_Z 0x20
 
-#define LSM6DS0_ACC_GYRO_FUNC_EN_MASK  	0x04
-#define LSM6DS0_PEDO_EN_MASK 0x40
-typedef enum {
-  	LSM6DS0_ACC_GYRO_PEDO_EN_DISABLED 		 =0x00,
-  	LSM6DS0_ACC_GYRO_PEDO_EN_ENABLED 		 =0x40,
-} LSM6DS0_ACC_GYRO_PEDO_EN_t;
-
-#define LSM6DS0_TILT_EN_MASK 0x20
-
-typedef enum {
-  	LSM6DS0_ACC_GYRO_TILT_EN_DISABLED 		 =0x00,
-  	LSM6DS0_ACC_GYRO_TILT_EN_ENABLED 		 =0x20,
-} LSM6DS0_ACC_GYRO_TILT_EN_t;
-
-typedef enum {
-  	LSM6DS0_ACC_GYRO_INT1 		 =0,
-  	LSM6DS0_ACC_GYRO_INT2 		 =1,
-} LSM6DS0_ACC_GYRO_ROUNT_INT_t;
-typedef enum {
-  	LSM6DS0_ACC_GYRO_FUNC_EN_DISABLED 		 =0x00,
-  	LSM6DS0_ACC_GYRO_FUNC_EN_ENABLED 		 =0x04,
-} LSM6DS0_ACC_GYRO_FUNC_EN_t;
-
-typedef enum {
-  	LSM6DS0_ACC_GYRO_INT_TILT_DISABLED 		 =0x00,
-  	LSM6DS0_ACC_GYRO_INT_TILT_ENABLED 		 =0x02,
-} LSM6DS0_ACC_GYRO_INT2_TILT_t;
-
-#define  	LSM6DS0_ACC_GYRO_INT_TILT_MASK  	0x02
-typedef enum {
-  	LSM6DS0_ACC_GYRO_TILT_DISABLED 		 =0x00,
-  	LSM6DS0_ACC_GYRO_TILT_ENABLED 		 =0x02,
-} LSM6DS0_ACC_GYRO_TILT_t;
-
-#define LSM6DS0_ACC_GYRO_TILT_MASK  	0x02
-
-typedef enum {
-  	LSM6DS0_ACC_GYRO_INT_SIGN_MOT_DISABLED 		 =0x00,
-  	LSM6DS0_ACC_GYRO_INT_SIGN_MOT_ENABLED 		 =0x40,
-} LSM6DS0_ACC_GYRO_INT_SIGN_MOT_t;
-
-#define  	LSM6DS0_ACC_GYRO_INT_SIGN_MOT_MASK  	0x40
-
-typedef enum {
-  	LSM6DS0_ACC_GYRO_SIGN_MOT_DISABLED 		 =0x00,
-  	LSM6DS0_ACC_GYRO_SIGN_MOT_ENABLED 		 =0x01,
-} LSM6DS0_ACC_GYRO_SIGN_MOT_t;
-
-#define  	LSM6DS0_ACC_GYRO_SIGN_MOT_MASK  	0x01
-
-typedef enum {
-  	LSM6DS0_ACC_GYRO_RAM_PAGE_DISABLED 		 =0x00,
-  	LSM6DS0_ACC_GYRO_RAM_PAGE_ENABLED 		 =0x80,
-} LSM6DS0_ACC_GYRO_RAM_PAGE_t;
-
-#define LSM6DS0_RAM_PAGE_MASK  	0x80
-#define LSM6DS0_CONFIG_PEDO_THS_MIN          0x0F
-
-typedef enum {
-  	LSM6DS0_ACC_GYRO_PEDO_RST_STEP_DISABLED 	 =0x00,
-  	LSM6DS0_ACC_GYRO_PEDO_RST_STEP_ENABLED 		 =0x02,
-} LSM6DS0_ACC_GYRO_PEDO_RST_STEP_t;
-
-#define LSM6DS0_PEDO_RST_STEP_MASK  0x02
-
-typedef enum {
-  	LSM6DS0_ACC_GYRO_INT_ACTIVE_HIGH 	 =0x00,
-  	LSM6DS0_ACC_GYRO_INT_ACTIVE_LOW		 =0x20,
-} LSM6DS0_ACC_GYRO_INT_ACTIVE_t;
-
-#define LSM6DS0_ACC_GYRO_INT_ACTIVE_MASK 0x20
-
-typedef enum {
-  	LSM6DS0_ACC_GYRO_INT_LATCH 	  =0x01,
-  	LSM6DS0_ACC_GYRO_INT_NO_LATCH	 =0x00,
-} LSM6DS0_ACC_GYRO_INT_LATCH_CTL_t;
-
-#define LSM6DS0_ACC_GYRO_INT_LATCH_CTL_MASK 0x01
-
-
-
-#define LSM6DS0_SIGNICANT_MOTION_INT_STATUS 0x40
-#define LSM6DS0_TILT_INT_STATUS 0x20
-#define LSM6DS0_STEP_DETECT_INT_STATUS 0x10
-
 
 
 #define LSM6DS0_SUCCESS		       0
@@ -340,11 +254,9 @@ typedef enum {
 
 #define LSM6DS0_BUFSIZE 60
 
-/*------------------------------------------------------------------*/
-
 // 1 rad = 180/PI degree, L3G4200D_OUT_MAGNIFY = 131,
 // 180*131/PI = 7506
-#define DEGREE_TO_RAD	180*1000000/PI//7506  // fenggy mask
+#define DEGREE_TO_RAD	7506  //180*1000000/PI//7506  // fenggy mask
 //#define DEGREE_TO_RAD 819	 
-#endif //L3M6DS3_H
+#endif //L3M6DS3_GY_H
 
