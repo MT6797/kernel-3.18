@@ -69,6 +69,7 @@
 #include "ddp_dsi.h"
 #include "m4u.h"
 #include "mtkfb_console.h"
+#include "mt_boot_common.h"
 #if defined(CONFIG_MTK_LEGACY)
 #include <mach/mt_gpio.h>
 #include <cust_gpio_usage.h>
@@ -5179,6 +5180,8 @@ static int smart_ovl_try_switch_mode_nolock(void)
 	int i, stable;
 	unsigned long long DL_bw, DC_bw, bw_th;
 
+	if (get_boot_mode() == FACTORY_BOOT)
+			return 0;
 	if (!disp_helper_get_option(DISP_OPT_SMART_OVL))
 		return 0;
 
