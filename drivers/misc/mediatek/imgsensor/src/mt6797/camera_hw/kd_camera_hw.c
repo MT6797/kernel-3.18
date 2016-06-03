@@ -172,7 +172,7 @@ PowerUp PowerOnList = {
 	   {SensorMCLK, Vol_High, 0},
 	   {DOVDD, Vol_1800, 0},
 	   {AVDD, Vol_2800, 0},
-	   {DVDD, Vol_1220, 0},
+	   {DVDD, Vol_1200, 0},
 	   {AFVDD, Vol_2800, 5},
 	   {PDN, Vol_Low, 4},
 	   {PDN, Vol_High, 0},
