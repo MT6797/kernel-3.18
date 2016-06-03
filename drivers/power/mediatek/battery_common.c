@@ -2289,7 +2289,11 @@ void mt_battery_GetBatteryData(void)
 	bat_vol = battery_meter_get_battery_voltage(KAL_TRUE);
 	Vsense = battery_meter_get_VSense();
 	if (upmu_is_chr_det() == KAL_TRUE)
+		#ifdef CONFIG_MTK_BQ25896_SUPPORT
+		ICharging = get_bat_charging_current_level();//[FAQ17629]使用switch charging后ICharging读取不准问题
+		#else
 		ICharging = battery_meter_get_charging_current();
+		#endif
 	else
 		ICharging = 0;
 

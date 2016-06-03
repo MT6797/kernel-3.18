@@ -168,17 +168,28 @@ static unsigned int get_constant_voltage(void)
 #ifdef CONFIG_MTK_BIF_SUPPORT
 	unsigned int vbat_bif = 0;
 	unsigned int vbat_auxadc;
+	unsigned int vbat_auxadc_sum;
 	unsigned int vbat, bif_ok;
 	int i;
 #endif
 	/*unit:mV defined in cust_charging.h */
+	#ifdef CONFIG_BATTERY_HIGH_VOLTAGE
+	if(CONFIG_BATTERY_HIGH_VOLTAGE == 4400)
+		cv = 4350;//当电池电压达到电池满电4400mV之后(但是ZCV值可能还没到达4400)，退出9V充电
+	#else
 	cv = V_CC2TOPOFF_THRES;
+	#endif
 #ifdef CONFIG_MTK_BIF_SUPPORT
 	/*Use BIF API to get vbat_core to adjust cv */
 	i = 0;
+	vbat_auxadc_sum = 0;
 	do {
 		battery_charging_control(CHARGING_CMD_GET_BIF_VBAT, &vbat_bif);
+		for(i=0;i<5;i++){
 		vbat_auxadc = battery_meter_get_battery_voltage(KAL_TRUE);
+		vbat_auxadc_sum += vbat_auxadc;
+		}
+		vbat_auxadc = vbat_auxadc_sum/5; //做5次采样取平均值，减小误差值
 		if (vbat_bif < vbat_auxadc && vbat_bif != 0) {
 			vbat = vbat_bif;
 			bif_ok = 1;
@@ -1100,6 +1111,7 @@ static void pchr_turn_on_charging(void)
 #if !defined(CONFIG_MTK_JEITA_STANDARD_SUPPORT)
 	BATTERY_VOLTAGE_ENUM cv_voltage;
 #endif
+	BATTERY_VOLTAGE_ENUM cv_vol;
 	unsigned int charging_enable = KAL_TRUE;
 
 	battery_log(BAT_LOG_FULL,"[pchr_turn_on_charging]\n");
@@ -1191,6 +1203,11 @@ static void pchr_turn_on_charging(void)
 			g_cv_voltage = cv_voltage;
 			#endif
 #endif
+			#ifdef CONFIG_BATTERY_HIGH_VOLTAGE
+			if(CONFIG_BATTERY_HIGH_VOLTAGE == 4350)
+				cv_vol = BATTERY_VOLT_04_350000_V;
+				battery_charging_control(CHARGING_CMD_SET_CV_VOLTAGE,&cv_vol);
+			#endif
 		}
 	}
 

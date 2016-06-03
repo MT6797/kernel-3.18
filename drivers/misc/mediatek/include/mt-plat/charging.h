@@ -62,7 +62,7 @@
  *  Log
  ****************************************************************************/
 #define BAT_LOG_CRTI 1
-#define BAT_LOG_FULL 2
+#define BAT_LOG_FULL 0
 #define BAT_LOG_DEBG 3
 
 #define battery_xlog_printk(num, fmt, args...) \
@@ -76,6 +76,7 @@ do { \
 	if (Enable_BATDRV_LOG >= (int)num) \
 		switch (num) {\
 		case BAT_LOG_CRTI:\
+		case BAT_LOG_FULL:\
 			pr_err(fmt, ##args); \
 			break; \
 			/*fall-through*/\
