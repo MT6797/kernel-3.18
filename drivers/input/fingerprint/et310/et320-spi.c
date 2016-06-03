@@ -1121,7 +1121,7 @@ u8 result1[] = {0xFF, 0xFF};
 static struct kobject *et320_kobj=NULL;
 static ssize_t fp_show_readimage(struct device *ddri,struct device_attribute *attr,char *buf)
 {	
-	return sprintf(buf,"%x %x %x %x\n", result[0],result[1],result1[0],result1[1]);	//return 0;
+	return sprintf(buf,"ET310:%x %x\n",result[1],result1[1]);
 }
 static DEVICE_ATTR(readimage,S_IWUSR|S_IRUGO,fp_show_readimage,NULL);
 static int fp_is_connected(struct fp_data *fp)
