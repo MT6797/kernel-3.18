@@ -51,6 +51,7 @@ stCAM_CAL_LIST_STRUCT g_camCalList[] = {
 
 	{IMX214_MONO_SENSOR_ID, 0xA0, CMD_AUTO, cam_cal_check_mtk_cid},
 	{S5K5E2YA_SENSOR_ID, 0x00, CMD_DEV1, cam_cal_check_double_eeprom},
+	{S5K3P3SX_SENSOR_ID, 0xA0, CMD_AUTO, cam_cal_check_mtk_cid},
 
 	/*  ADD before this line */
 	{0, 0, CMD_NONE, 0} /*end of list*/
