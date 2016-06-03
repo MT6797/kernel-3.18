@@ -59,7 +59,8 @@
 ******************************************************************************/
 static DEFINE_SPINLOCK(g_strobeSMPLock);	/* cotta-- SMP proection */
 static struct work_struct workTimeOut;
-static int g_timeOutTimeMs;
+static int g_timeOutTimeMs; 
+extern int g_timeOutTimeMs_reg;//led1 led2共用一个FL_TIM
 static u32 strobe_Res;
 /*****************************************************************************
 Functions
@@ -169,8 +170,8 @@ static void timerInit(void)
 
 
 }
-
-
+#define e_DutyNum 16
+extern int isMovieMode[e_DutyNum+1][e_DutyNum+1];
 static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
 {
 	int temp;
@@ -188,14 +189,24 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
 	switch (cmd) {
 
 	case FLASH_IOC_SET_TIME_OUT_TIME_MS:
-		PK_DBG("FLASH_IOC_SET_TIME_OUT_TIME_MS: %d\n", (int)arg);
-		g_timeOutTimeMs = arg;
+			// if(arg>1600)
+				// arg= 1600;//最大支持1.6秒亮灯
+			g_timeOutTimeMs_reg=arg/100;//预闪的时间长一点 计算主闪的duty值就会更准确 
+			if(g_timeOutTimeMs_reg>16)
+				g_timeOutTimeMs_reg = 16;
+			g_timeOutTimeMs = arg;//用于给torch mode的亮灯计时
+			PK_DBG("FLASH_IOC_SET_TIME_OUT_TIME_MS LED2: %ld g_timeOutTimeMs_reg=0x%x \n",arg,g_timeOutTimeMs_reg);
 		break;
 
 
 	case FLASH_IOC_SET_DUTY:
-		PK_DBG("FLASHLIGHT_DUTY: %d\n", (int)arg);
-			m_duty2 = arg;
+		PK_DBG("FLASH_IOC_SET_DUTY LED2: %d\n", (int)arg);
+		// if(arg < 0)
+			// arg = 0;
+		// if(arg>=/* e_DutyNum */16)
+			// arg=16-1;
+		
+		m_duty2 = arg;
 		break;
 
 
@@ -205,26 +216,33 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
 		break;
 
 	case FLASH_IOC_SET_ONOFF:
-		PK_DBG("FLASHLIGHT_ONOFF: %d\n", (int)arg);
+		PK_DBG("FLASH_IOC_SET_ONOFF LED2: %d\n", (int)arg);
 		if (arg == 1) {
-			if (g_timeOutTimeMs != 0) {
-				ktime_t ktime;
-
-				ktime = ktime_set(0, g_timeOutTimeMs * 1000000);
-				hrtimer_start(&g_timeOutTimer, ktime, HRTIMER_MODE_REL);
+			if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
+			{//torch mode的timeout time使用内核计时器，超时调用FL_Disable函数拉低GPIO脚，并set LEDx_EN 0
+				if (g_timeOutTimeMs != 0) {
+					ktime_t ktime;
+	
+					ktime = ktime_set(0, g_timeOutTimeMs * 1000000);
+					hrtimer_start(&g_timeOutTimer, ktime, HRTIMER_MODE_REL);
+				}				
 			}
 			LED2Closeflag = 0;
 			FlashIc_Enable();
-flashEnable_SGM3784_2();
-			FL_dim_duty(m_duty2);
-			FL_Enable();
+//flashEnable_SGM3784_2();
+			FL_dim_duty(m_duty2);//调用setDuty_SGM3784_2 函数里面区分是LED1还是LED2
+			FL_Enable();//调用flashEnable_SGM3784_2 函数里面区分是LED1还是LED2//设置timeout time g_timeOutTimeMs_reg
     		}
     		else
     		{
     			LED2Closeflag = 1;
-			FlashIc_Enable();
-			FL_dim_duty(m_duty2);
-			FL_Disable();
+			//FlashIc_Enable();
+			//FL_dim_duty(m_duty2);
+			if(isMovieMode[m_duty1+1][m_duty2+1] != 1)
+			{//torch mode时，通过计时器超时调用FL_Disable
+				FL_Disable(); //work_timeOutFunc函数中调用，但是这里注释掉的话，校准的时候不打闪 //disable flash mode  调用flashDisable_SGM3784_2				
+			}
+			else
 			hrtimer_cancel(&g_timeOutTimer);
 		}
 		break;
