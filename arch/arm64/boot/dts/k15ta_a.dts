@@ -1639,6 +1639,12 @@
 
 /* cust_charging.h start*/
 &bat_metter {
+			/* Linear Charging Threshold */
+			v_pre2cc_thres = <3400 >;       /* unit: mV */
+			v_cc2topoff_thres = <4300 >;
+			recharging_voltage = <4300 >;
+			charging_full_current = <100 >; /* unit: mA */
+
 			usb_charger_current_suspend = <0 >;	/* Unit: 0.01 mA */
 			usb_charger_current_unconfigured = <7000 >;	/* Unit: 0.01 mA */
 			usb_charger_current_configured = <50000 >;	/* Unit: 0.01 mA */
