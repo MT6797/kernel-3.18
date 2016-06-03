@@ -294,6 +294,7 @@ static void mtk_ta_reset_vchr(void)
 	battery_log(BAT_LOG_CRTI, "[PE+]mtk_ta_reset_vchr(): reset Vchr to 5V\n");
 }
 
+bool charge_suspend = KAL_FALSE;
 static void mtk_ta_increase(void)
 {
 	kal_bool ta_current_pattern = KAL_TRUE;	/* TRUE = increase */
@@ -301,7 +302,7 @@ static void mtk_ta_increase(void)
 	if (ta_cable_out_occur == KAL_FALSE) {
 		battery_charging_control(CHARGING_CMD_SET_TA_CURRENT_PATTERN, &ta_current_pattern);
 	} else {
-		ta_check_chr_type = KAL_TRUE;
+		ta_check_chr_type = KAL_TRUE;//拔除发生，复位ta_check_chr_type为true,见battery_pump_express_charger_check
 		battery_log(BAT_LOG_CRTI, "[PE+]mtk_ta_increase() Cable out\n");
 	}
 }
@@ -400,20 +401,23 @@ static void mtk_ta_init(void)
 
 static void battery_pump_express_charger_check(void)
 {
-	battery_log(BAT_LOG_FULL,"[%s %d] ta_check_chr_type = %d,\
+	battery_log(BAT_LOG_FULL,"[%s %d] [PE+]ta_check_chr_type = %d,\
 	BMT_status.charger_type = %d,\
 	BMT_status.SOC = %d,\
 	batt_cust_data.ta_start_battery_soc = %d,\
-	batt_cust_data.ta_stop_battery_soc = %d\n",__FUNCTION__,__LINE__,
+	batt_cust_data.ta_stop_battery_soc = %d,\
+	charge_suspend = %d\n",__FUNCTION__,__LINE__,
 	ta_check_chr_type,
 	BMT_status.charger_type,
 	BMT_status.SOC,
 	batt_cust_data.ta_start_battery_soc,
-	batt_cust_data.ta_stop_battery_soc);
+	batt_cust_data.ta_stop_battery_soc,
+	charge_suspend);
 	if (KAL_TRUE == ta_check_chr_type &&
 	    STANDARD_CHARGER == BMT_status.charger_type &&
 	    BMT_status.SOC >= batt_cust_data.ta_start_battery_soc &&
-	    BMT_status.SOC < batt_cust_data.ta_stop_battery_soc) {
+	    BMT_status.SOC < batt_cust_data.ta_stop_battery_soc&&
+		charge_suspend == KAL_TRUE) {
 		battery_log(BAT_LOG_CRTI, "[PE+]Starting PE Adaptor detection\n");
 
 		mutex_lock(&ta_mutex);
@@ -567,7 +571,16 @@ static void battery_pump_express_algorithm_start(void)
 			battery_log(BAT_LOG_CRTI,
 				    "[PE+]CV=%d reached. Stopping PE+, is_ta_connect =%d\n", cv,
 				    is_ta_connect);
-		} else if (0) {
+		} 
+		else if (charge_suspend == false) {
+			/* 亮屏充电发热大 改为5V2A充电 */
+			battery_charging_control(CHARGING_CMD_ENABLE, &charging_enable);
+			mtk_ta_reset_vchr();	/* decrease TA voltage to 5V */
+			ta_check_chr_type = KAL_TRUE;//亮屏时降压完成，复位ta_check_chr_type为true，用于在灭屏时进入升压充电
+			battery_log(BAT_LOG_CRTI,
+					"[PE+]Enter resume. Stopping PE+, is_ta_connect =%d\n", is_ta_connect);
+		}
+		else if (0) {
 			/*check charger voltage status if vbus is dropped*/
 			if (abs(charger_vol - ta_v_chr_org) < 1000 && BMT_status.bat_charging_state == CHR_CC) {
 				ta_check_chr_type = KAL_TRUE;
@@ -1049,6 +1062,10 @@ void select_charging_current(void)
 				g_temp_input_CC_value = batt_cust_data.ac_charger_current;
 
 			g_temp_CC_value = batt_cust_data.ac_charger_current;
+			if(charge_suspend == false){//降低亮屏充电电流为5V1A 控制充电发热
+				g_temp_input_CC_value = 100000;
+				g_temp_CC_value = 100000;
+			}
 #if defined(CONFIG_MTK_PUMP_EXPRESS_PLUS_SUPPORT)
 			if (is_ta_connect == KAL_TRUE)
 				set_ta_charging_current();
