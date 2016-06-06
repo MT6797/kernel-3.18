@@ -95,9 +95,9 @@ static DECLARE_MUTEX(g_strobeSem);
 
 static struct work_struct workTimeOut;
 
-#define GPIO_LED_EN  		8
-#define GPIO_LED_STROBE  	9
-#define GPIO_LED_GPIO  		10
+#define GPIO_LED_EN  		90//8
+#define GPIO_LED_STROBE  	91//9
+#define GPIO_LED_GPIO  		255//10
 
 #define SGM3784_REG_ENABLE      0x0F
 #define SGM3784_REG_MODE        0x01
@@ -491,7 +491,10 @@ int flashEnable_SGM3784_2(void)
 			// writeReg(SGM3784_REG_MODE, 0xfa);	//【0xea LED_MOD = 010 Assist light mode with continuous LED current STR_MOD =0 软触发】//【x0fa STR_MOD =1 硬触发】
 			writeReg(SGM3784_REG_MODE, 0xf8);	//【0xf8 LED_MOD = 000 To enable torch mode, set the LED_MOD bits to 000(standby mode) STR_MOD =1 硬触发】
 		
-			writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0xff  //0xdf
+			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
+				writeReg(SGM3784_REG_TIMING, 0xdf);
+			else
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0xff  //0xdf
 			writeReg(0x03, 0x0e);	//0X48  //0x0e
 			// writeReg(SGM3784_REG_TORCH_LED1, 0x03);	//led1 flash = 0 //setduty里面已经赋值了
 			// writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led1 torch =0
@@ -507,7 +510,10 @@ int flashEnable_SGM3784_2(void)
 			// gpio_set_value(GPIO_LED_GPIO,0);
 			writeReg(SGM3784_REG_MODE, 0xfb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB
 		
-			writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0XEF  //0XDF
+			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
+				writeReg(SGM3784_REG_TIMING, 0xdf);
+			else
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0XEF  //0XDF
 			writeReg(0x03, 0x0e);	//0X48  //0X0E
 			// writeReg(SGM3784_REG_FLASH_LED1, 0x08);	//led1 flash=0 //setduty里面已经赋值
 			// writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led1 torch =0
@@ -533,7 +539,10 @@ int flashEnable_SGM3784_2(void)
 			// writeReg(SGM3784_REG_MODE, 0xfa);	//Assist light mode with continuous LED current //0xea
 			writeReg(SGM3784_REG_MODE, 0xf8);	//【0xf8 LED_MOD = 000 To enable torch mode, set the LED_MOD bits to 000(standby mode) STR_MOD =1 硬触发】
 		
-			writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0xff  //0xdf
+			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
+				writeReg(SGM3784_REG_TIMING, 0xdf);
+			else
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0xff  //0xdf
 			writeReg(0x03, 0x0e);	//0X48  //0x0e
 			// writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 flash = 0
 			// writeReg(SGM3784_REG_TORCH_LED2, 0x03);	//led1 torch =0
@@ -548,7 +557,10 @@ int flashEnable_SGM3784_2(void)
 			// gpio_set_value(GPIO_LED_GPIO,0);;//拉低GPIO pin的操作转移disable函数中，否则会write reg fail
 			writeReg(SGM3784_REG_MODE, 0xfb);	//【0xFB FL_MOD = 011 flash mode 电平触发 高触发 STR_MOD = 1硬触发 】 //【0XEB STR_MOD = 0软触发 STR_LV = 1高触发】
 		
-			writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0XEF  //【0XDF 配置GPIO脚为TxMASK operation mode FL_TIM=1600ms】 //【0xd8 FL_TIM = 1000ms 默认1600ms  配置GPIO脚为torch mode】
+			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
+				writeReg(SGM3784_REG_TIMING, 0xdf);
+			else
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0XEF  //【0XDF 配置GPIO脚为TxMASK operation mode FL_TIM=1600ms】 //【0xd8 FL_TIM = 1000ms 默认1600ms  配置GPIO脚为torch mode】
 			writeReg(0x03, 0x0e);	//0X48  //0X0E
 			// writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash=0
 			// writeReg(SGM3784_REG_FLASH_LED2, 0x08);	//led1 torch =0
@@ -571,7 +583,10 @@ int flashEnable_SGM3784_2(void)
 			// writeReg(SGM3784_REG_MODE, 0xfa);	//Assist light mode with continuous LED current //0xea
 			writeReg(SGM3784_REG_MODE, 0xf8);	//【0xf8 LED_MOD = 000 To enable torch mode, set the LED_MOD bits to 000(standby mode) STR_MOD =1 硬触发】
 		
-			writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0xff  //0xdf
+			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
+				writeReg(SGM3784_REG_TIMING, 0xdf);
+			else
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0xff  //0xdf
 			writeReg(0x03, 0x0e);	//0X48  //0x0e
 			//setduty函数中已经对 SGM3784_REG_TORCH_LED1 SGM3784_REG_TORCH_LED2 配置上层传下来的duty电流
 			// writeReg(SGM3784_REG_TORCH_LED1, 0x03);	//led1 flash = 0
@@ -588,7 +603,10 @@ int flashEnable_SGM3784_2(void)
 			// gpio_set_value(GPIO_LED_GPIO,0);;
 			writeReg(SGM3784_REG_MODE, 0xfb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB 
 		
-			writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0XEF  //0XDF //11011000
+			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
+				writeReg(SGM3784_REG_TIMING, 0xdf);
+			else
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0XEF  //0XDF //11011000
 			writeReg(0x03, 0x0e);	//0X48  //0X0E //00001110
 			//setduty函数中已经对SGM3784_REG_FLASH_LED1 SGM3784_REG_FLASH_LED2配置上层传下来的duty电流
 			// writeReg(SGM3784_REG_FLASH_LED1, 0x08);	//led1 flash=0  //LED1 Flash Current Register (Register 0x06)
@@ -609,13 +627,13 @@ int flashDisable_SGM3784_2(void)
 	//PK_DBG("flashDisable_SGM3784_2\n");
 	PK_DBG("zhouzhenshu---lijin---flashDisable_SGM3784_2 LED1Closeflag = %d, LED2Closeflag = %d\n", LED1Closeflag, LED2Closeflag);
 	
+	FlashIc_Enable();
+	writeReg(SGM3784_REG_ENABLE, 0x00);	
+	writeReg(SGM3784_REG_MODE, 0x00);
+	gpio_set_value(GPIO_LED_STROBE,0);
+	gpio_set_value(GPIO_LED_GPIO,0); //不分LED1 LED2?
 	
-	//writeReg(SGM3784_REG_ENABLE, 0x00);	
-	//writeReg(SGM3784_REG_MODE, 0x00);
-	//gpio_set_value(GPIO_LED_STROBE,0);
-	//gpio_set_value(GPIO_LED_GPIO,0); //不分LED1 LED2?
-	
-	//return 0;
+	return 0;
 
 	if((LED1Closeflag == 1) && (LED2Closeflag == 1))
 	{
