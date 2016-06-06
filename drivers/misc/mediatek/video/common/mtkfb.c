@@ -2484,7 +2484,7 @@ void mtkfb_clear_lcm(void)
 }
 
 
-extern bool charge_suspend;
+// extern bool charge_suspend;
 static void mtkfb_blank_suspend(void)
 {
 	int ret = 0;
@@ -2511,7 +2511,7 @@ static void mtkfb_blank_suspend(void)
 		return;
 	}
 	pr_debug("[FB Driver] leave early_suspend\n");
-	charge_suspend = true;
+	// charge_suspend = true;
 }
 
 /* PM resume */
@@ -2545,7 +2545,7 @@ static void mtkfb_blank_resume(void)
 		DISPERR("primary display resume failed\n");
 		return;
 	}
-	charge_suspend = false;
+	// charge_suspend = false;
 
 	pr_debug("[FB Driver] leave late_resume\n");
 }

@@ -287,6 +287,8 @@ static void set_ta_charging_current(void)
 static void mtk_ta_reset_vchr(void)
 {
 	CHR_CURRENT_ENUM chr_current = CHARGE_CURRENT_70_00_MA;
+	printk("%s %d-------------call dump_stack()-------------",__FUNCTION__,__LINE__);
+	dump_stack();
 
 	battery_charging_control(CHARGING_CMD_SET_INPUT_CURRENT, &chr_current);
 	msleep(250);		/* reset Vchr to 5V */
@@ -547,6 +549,14 @@ static void battery_pump_express_algorithm_start(void)
 			battery_log(BAT_LOG_CRTI,
 				    "[PE+]Stop battery_pump_express_algorithm, SOC=%d is_ta_connect =%d, TA_STOP_BATTERY_SOC: %d\n",
 				    BMT_status.SOC, is_ta_connect, batt_cust_data.ta_stop_battery_soc);
+		} 
+		else if (charge_suspend == false) {
+			/* 亮屏充电发热大 改为5V2A充电 */
+			battery_charging_control(CHARGING_CMD_ENABLE, &charging_enable);
+			mtk_ta_reset_vchr();	/* decrease TA voltage to 5V */
+			ta_check_chr_type = KAL_TRUE;//亮屏时降压完成，复位ta_check_chr_type为true，用于在灭屏时进入升压充电
+			battery_log(BAT_LOG_CRTI,
+					"[PE+]Enter resume. Stopping PE+, is_ta_connect =%d\n", is_ta_connect);
 		}
 #if defined(CONFIG_MTK_DYNAMIC_BAT_CV_SUPPORT)
 /*For BQ25896, voltage is used to check if PE+ should be tuned off.*/
@@ -571,14 +581,6 @@ static void battery_pump_express_algorithm_start(void)
 			battery_log(BAT_LOG_CRTI,
 				    "[PE+]CV=%d reached. Stopping PE+, is_ta_connect =%d\n", cv,
 				    is_ta_connect);
-		} 
-		else if (charge_suspend == false) {
-			/* 亮屏充电发热大 改为5V2A充电 */
-			battery_charging_control(CHARGING_CMD_ENABLE, &charging_enable);
-			mtk_ta_reset_vchr();	/* decrease TA voltage to 5V */
-			ta_check_chr_type = KAL_TRUE;//亮屏时降压完成，复位ta_check_chr_type为true，用于在灭屏时进入升压充电
-			battery_log(BAT_LOG_CRTI,
-					"[PE+]Enter resume. Stopping PE+, is_ta_connect =%d\n", is_ta_connect);
 		}
 		else if (0) {
 			/*check charger voltage status if vbus is dropped*/

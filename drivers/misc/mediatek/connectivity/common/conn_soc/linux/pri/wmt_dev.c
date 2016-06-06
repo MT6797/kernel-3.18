@@ -247,6 +247,7 @@ struct early_suspend wmt_early_suspend_handler = {
 
 #else
 
+extern bool charge_suspend;
 static struct notifier_block wmt_fb_notifier;
 static int wmt_fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data)
 {
@@ -268,7 +269,8 @@ static int wmt_fb_notifier_callback(struct notifier_block *self, unsigned long e
 		g_es_lr_flag_for_quick_sleep = 0;
 		g_es_lr_flag_for_lpbk_onoff = 1;
 		osal_unlock_sleepable_lock(&g_es_lr_lock);
-		WMT_WARN_FUNC("@@@@@@@@@@wmt enter UNBLANK @@@@@@@@@@@@@@\n");
+		WMT_WARN_FUNC("@@@@@@@@@@wmt enter UNBLANK @@@@@@@@@@@@@@ line =%d\n",__LINE__);
+		charge_suspend = false;
 		schedule_work(&gPwrOnOffWork);
 		break;
 	case FB_BLANK_POWERDOWN:
@@ -276,7 +278,8 @@ static int wmt_fb_notifier_callback(struct notifier_block *self, unsigned long e
 		g_es_lr_flag_for_quick_sleep = 1;
 		g_es_lr_flag_for_lpbk_onoff = 0;
 		osal_unlock_sleepable_lock(&g_es_lr_lock);
-		WMT_WARN_FUNC("@@@@@@@@@@wmt enter early POWERDOWN @@@@@@@@@@@@@@\n");
+		WMT_WARN_FUNC("@@@@@@@@@@wmt enter early POWERDOWN @@@@@@@@@@@@@@ line =%d\n",__LINE__);
+		charge_suspend = true;
 		schedule_work(&gPwrOnOffWork);
 		break;
 	default:
