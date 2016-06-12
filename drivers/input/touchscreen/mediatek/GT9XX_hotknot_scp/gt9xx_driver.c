@@ -1043,6 +1043,56 @@ s32 gtp_send_cfg_for_charger(struct i2c_client *client)
 }
 
 #endif
+
+#ifdef GT_TP_SHOW_FW_STATUS   /*--start-----SHOW_FW_STATUS------------*/
+u8 cfg_id = 0;
+u8 fw_id_low = 0,fw_id_high = 0;	//save FW version
+
+static ssize_t tp_fw_status_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, " %d--%x%x\n", cfg_id,fw_id_high,fw_id_low);
+} 
+
+static int read_FW_version(struct i2c_client *client)
+{
+	int ret;
+	
+	ret = i2c_read_bytes(client, 0x8144, &fw_id_low, 1);
+	if (ret < 0)
+	{
+		GTP_ERROR("i2c_read_bytes error.");
+	}
+	ret = i2c_read_bytes(client, 0x8145, &fw_id_high, 1);
+	if (ret < 0)
+	{
+		GTP_ERROR("i2c_read_bytes error.");
+	}
+	ret = i2c_read_bytes(client, 0x8047, &cfg_id, 1);
+	if (ret < 0)
+	{
+		GTP_ERROR("i2c_read_bytes error.");
+	}
+	GTP_ERROR("deng,read_FW_version: %d--%x%x\n",cfg_id,fw_id_high,fw_id_low);
+	return ret;
+}
+
+
+
+static DEVICE_ATTR(fw_status, S_IRUGO,tp_fw_status_show, NULL);
+
+static struct attribute *tp_attributes[] = {
+	&dev_attr_fw_status.attr,
+	NULL
+};
+
+static struct attribute_group tp_attribute_group = {
+	.attrs = tp_attributes
+};
+
+#endif  /*--end-----SHOW_FW_STATUS------------*/
+
+
 /*******************************************************
 Function:
     Read goodix touchscreen version function.
@@ -1260,7 +1310,10 @@ static s32 gtp_init_panel(struct i2c_client *client)
 
 			if (1) {
 				grp_cfg_version = send_cfg_buf[sensor_id][0];
-				send_cfg_buf[sensor_id][0] = 0x00;
+				/*--  the next line will write 0x00 to 0x8047 reg ,change version number to V65, wo should  annotation here  ,
+					if we want to update lower FW	 open the next line to change to first VERSION number  --*/
+				//send_cfg_buf[sensor_id][0] = 0x00; GTP_ERROR("deng,will set 0x8017 = 0x00 \n");
+				/*--------------------------*/
 #ifdef CONFIG_GTP_CHARGER_SWITCH
 				charger_grp_cfg_version = send_charger_cfg_buf[sensor_id][0];
 				send_charger_cfg_buf[sensor_id][0] = 0x00;
@@ -1365,9 +1418,16 @@ static s32 gtp_init_panel(struct i2c_client *client)
 #ifdef CONFIG_GTP_CHARGER_SWITCH
 		gtp_charger_switch(1);
 #else
-		ret = gtp_send_cfg(client);
-		if (ret < 0)
-			GTP_ERROR("Send config error.");
+		if(send_cfg_buf[sensor_id][0]> opr_buf[0]){
+			/*update new FW*/
+			ret = gtp_send_cfg(client);
+			if (ret < 0)
+				GTP_ERROR("Send config error.");
+		}
+		else{
+			/*low than now*/
+			GTP_DEBUG("no need to update\n");
+		}
 #endif
 		/* set config version to CTP_CFG_GROUP*/
 		/* for resume to send config*/
@@ -1953,6 +2013,9 @@ static s32 tpd_i2c_probe(struct i2c_client *client, const struct i2c_device_id *
 {
 	int err = 0;
 	int count = 0;
+#ifdef GT_TP_SHOW_FW_STATUS	
+	struct kobject *tp_kobj;
+#endif
 
 	GTP_INFO("tpd_i2c_probe start.");
 	if (RECOVERY_BOOT == get_boot_mode())
@@ -1970,8 +2033,35 @@ static s32 tpd_i2c_probe(struct i2c_client *client, const struct i2c_device_id *
 		if (check_flag)
 			break;
 	} while (count < 50);
+
+#ifdef GT_TP_SHOW_FW_STATUS		 /*--start-----SHOW_FW_STATUS------------*/
+	read_FW_version(client);
+	tp_kobj = kobject_create_and_add("tp", NULL);
+	if (!tp_kobj) {
+		goto error_sysfs;
+	}
+	err = sysfs_create_group(tp_kobj,&tp_attribute_group);
+	if (err < 0)
+	{
+		printk("sysfs_create_group fail: %d\n", err);
+		goto error_sysfs;
+	}
+
+#endif	 	/*--end-----SHOW_FW_STATUS------------*/
+	
 	GTP_INFO("tpd_i2c_probe done.count = %d, flag = %d", count, check_flag);
+	return 0;  /*probe succeed*/
+
+
+/*-----------------ERROR--------------------------------------*/
+#ifdef GT_TP_SHOW_FW_STATUS		 /*--start-----SHOW_FW_STATUS------------*/
+error_sysfs:
+	printk("deng, sysfs_create_group fail: %d  ########\n", err);
+	sysfs_remove_group(tp_kobj, &tp_attribute_group);
 	return 0;
+#endif	 	/*--end------SHOW_FW_STATUS------------*/
+
+
 }
 
 #ifdef CONFIG_OF_TOUCH

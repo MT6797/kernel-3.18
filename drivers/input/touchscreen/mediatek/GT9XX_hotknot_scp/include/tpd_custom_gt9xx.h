@@ -102,6 +102,7 @@ extern unsigned char gtp_default_FW_fl[];
 #define GTP_ESD_PROTECT       0	/* esd protection with a cycle of 2 seconds*/
 /*#define GUP_USE_HEADER_FILE   0*/
 /*#define GTP_FW_DOWNLOAD       0  */     /*update FW to TP SRAM*/
+#define GT_TP_SHOW_FW_STATUS	// show FW version
 
 #define GTP_CONFIG_MIN_LENGTH       186
 #define GTP_CONFIG_MAX_LENGTH       240
