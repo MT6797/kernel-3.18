@@ -868,8 +868,17 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 
 	var->activate = FB_ACTIVATE_NOW;
 
-	var->height = UINT_MAX;
-	var->width = UINT_MAX;
+	//var->height = UINT_MAX;
+	//var->width = UINT_MAX;
+	if(var->height <= 0)	 
+	{ 
+		var->height  = UINT_MAX;
+	}
+	if(var->width <= 0)
+	{
+		var->width	= UINT_MAX;
+	}
+	
 	var->grayscale = 0;
 	var->nonstd = 0;
 
