@@ -238,11 +238,11 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
     			LED2Closeflag = 1;
 			//FlashIc_Enable();
 			//FL_dim_duty(m_duty2);
-			if(isMovieMode[m_duty1+1][m_duty2+1] != 1)
+			// if(isMovieMode[m_duty1+1][m_duty2+1] != 1)
 			{//torch mode时，通过计时器超时调用FL_Disable
 				FL_Disable(); //work_timeOutFunc函数中调用，但是这里注释掉的话，校准的时候不打闪 //disable flash mode  调用flashDisable_SGM3784_2				
 			}
-			else
+			// else
 			hrtimer_cancel(&g_timeOutTimer);
 		}
 		break;

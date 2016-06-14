@@ -472,32 +472,22 @@ int flashEnable_SGM3784_2(void)
 		writeReg(SGM3784_REG_ENABLE, 0x00);//close
 		g_Reg_First_write = 0;
 		//FlashIc_Disable();	
-		
-		writeReg(SGM3784_REG_ENABLE, 0x00);	
-		writeReg(SGM3784_REG_MODE, 0x00);
-		gpio_set_value(GPIO_LED_STROBE,0);
 	}
 	else if(LED1Closeflag == 1)	//led1 close
 	{
-		#if defined(USE_NEW_DRIVER)
-		if(isMovieModeLED2[m_duty2] == 1)
-		#else
-		//if(isMovieMode[0][m_duty2+1] == 1)
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
-		#endif
 		{
-			//writeReg(0x0F, 0x00);
+			writeReg(SGM3784_REG_ENABLE, 0x00);//b.先把0x0F寄存器写成0x00，注意这里这么做的原因：0x01, 0x02寄存器在系统工作过程中不允许修改，当把0x0F写成0x00，系统被软关闭，此时可以修改0x01, 0x02寄存器。
 			// gpio_set_value(GPIO_LED_STROBE,0);
-			// writeReg(SGM3784_REG_MODE, 0xfa);	//【0xea LED_MOD = 010 Assist light mode with continuous LED current STR_MOD =0 软触发】//【x0fa STR_MOD =1 硬触发】
 			writeReg(SGM3784_REG_MODE, 0xf8);	//【0xf8 LED_MOD = 000 To enable torch mode, set the LED_MOD bits to 000(standby mode) STR_MOD =1 硬触发】
 		
 			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
-				writeReg(SGM3784_REG_TIMING, 0xdf);
+				writeReg(SGM3784_REG_TIMING, 0xf8);
 			else
-				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0xff  //0xdf
-			writeReg(0x03, 0x0e);	//0X48  //0x0e
-			// writeReg(SGM3784_REG_TORCH_LED1, 0x03);	//led1 flash = 0 //setduty里面已经赋值了
-			// writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led1 torch =0
+				writeReg(SGM3784_REG_TIMING, /* 0xf8 */0xF0|g_timeOutTimeMs_reg);	//0xff  //0xdf
+			writeReg(0x03, 0x48);	//0X48  //0x0e
+			writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash = 0
+			writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 torch =0
 			writeReg(SGM3784_REG_ENABLE, 0x02);	//led2 on
 			 gpio_set_value(GPIO_LED_GPIO,1);//Torch Mode通过GPIO触发，同时set the LED_MOD bits to 000，没有延时，disable时只能通过计时器超时来拉低
 			// gpio_set_value(GPIO_LED_STROBE,1);//Assist Light Mode 不需要拉高strbo pin
@@ -506,20 +496,19 @@ int flashEnable_SGM3784_2(void)
 
 		else
 		{
-			//writeReg(0x0F, 0x00);
+			writeReg(SGM3784_REG_ENABLE, 0x00);
 			// gpio_set_value(GPIO_LED_GPIO,0);
-			writeReg(SGM3784_REG_MODE, 0xfb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB
+			writeReg(SGM3784_REG_MODE, 0xeb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB
 		
 			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
-				writeReg(SGM3784_REG_TIMING, 0xdf);
+				writeReg(SGM3784_REG_TIMING, 0xc8);
 			else
-				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0XEF  //0XDF
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xc0|g_timeOutTimeMs_reg);	//0XEF  //0XDF
 			writeReg(0x03, 0x0e);	//0X48  //0X0E
-			// writeReg(SGM3784_REG_FLASH_LED1, 0x08);	//led1 flash=0 //setduty里面已经赋值
-			// writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led1 torch =0
+			writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash=0 //setduty里面已经赋值
+			writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 torch =0
 			writeReg(SGM3784_REG_ENABLE, 0x02);	//led2 on
-			// gpio_set_value(GPIO_LED_STROBE,1);
-			gpio_set_value(GPIO_LED_STROBE,1);
+			//gpio_set_value(GPIO_LED_STROBE,1);
 			PK_DBG("flashEnable_SGM3784_2 ---2--- LED1Closeflag = 1  led2 flash mode start\n");
 		}
 	}
@@ -534,18 +523,18 @@ int flashEnable_SGM3784_2(void)
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		#endif
 		{
-			//writeReg(0x0F, 0x00);
+			writeReg(0x0F, 0x00);
 			// gpio_set_value(GPIO_LED_STROBE,0);
 			// writeReg(SGM3784_REG_MODE, 0xfa);	//Assist light mode with continuous LED current //0xea
 			writeReg(SGM3784_REG_MODE, 0xf8);	//【0xf8 LED_MOD = 000 To enable torch mode, set the LED_MOD bits to 000(standby mode) STR_MOD =1 硬触发】
 		
 			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
-				writeReg(SGM3784_REG_TIMING, 0xdf);
+				writeReg(SGM3784_REG_TIMING, 0xf8);
 			else
-				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0xff  //0xdf
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xf0|g_timeOutTimeMs_reg);	//0xff  //0xdf
 			writeReg(0x03, 0x0e);	//0X48  //0x0e
-			// writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 flash = 0
-			// writeReg(SGM3784_REG_TORCH_LED2, 0x03);	//led1 torch =0
+			writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led2 flash = 0
+			writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led2 torch =0
 			writeReg(SGM3784_REG_ENABLE, 0x01);	//led1 on
 			gpio_set_value(GPIO_LED_GPIO,1);//Torch Mode通过GPIO触发，同时set the LED_MOD bits to 000，没有延时，disable时只能通过计时器超时来拉低
 			// gpio_set_value(GPIO_LED_STROBE,1);//Assist Light Mode 不需要拉高strbo pin
@@ -553,19 +542,19 @@ int flashEnable_SGM3784_2(void)
 		}			
 		else
 		{
-			//writeReg(0x0F, 0x00);
+			writeReg(0x0F, 0x00);
 			// gpio_set_value(GPIO_LED_GPIO,0);;//拉低GPIO pin的操作转移disable函数中，否则会write reg fail
-			writeReg(SGM3784_REG_MODE, 0xfb);	//【0xFB FL_MOD = 011 flash mode 电平触发 高触发 STR_MOD = 1硬触发 】 //【0XEB STR_MOD = 0软触发 STR_LV = 1高触发】
+			writeReg(SGM3784_REG_MODE, 0xeb);	//【0xFB FL_MOD = 011 flash mode 电平触发 高触发 STR_MOD = 1硬触发 】 //【0XEB STR_MOD = 0软触发 STR_LV = 1高触发】
 		
 			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
-				writeReg(SGM3784_REG_TIMING, 0xdf);
+				writeReg(SGM3784_REG_TIMING, 0xc8);
 			else
-				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0XEF  //【0XDF 配置GPIO脚为TxMASK operation mode FL_TIM=1600ms】 //【0xd8 FL_TIM = 1000ms 默认1600ms  配置GPIO脚为torch mode】
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xc0|g_timeOutTimeMs_reg);	//0XEF  //【0XDF 配置GPIO脚为TxMASK operation mode FL_TIM=1600ms】 //【0xd8 FL_TIM = 1000ms 默认1600ms  配置GPIO脚为torch mode】
 			writeReg(0x03, 0x0e);	//0X48  //0X0E
-			// writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash=0
-			// writeReg(SGM3784_REG_FLASH_LED2, 0x08);	//led1 torch =0
+			writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led2 flash=0
+			writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led2 torch =0
 			writeReg(SGM3784_REG_ENABLE, 0x01);	//led1 on
-			gpio_set_value(GPIO_LED_STROBE,1);
+			//gpio_set_value(GPIO_LED_STROBE,1);
 			PK_DBG("flashEnable_SGM3784_2 ---4--- LED2Closeflag = 1  led1 flash mode start\n");
 		}
 
@@ -578,19 +567,16 @@ int flashEnable_SGM3784_2(void)
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		#endif
 		{
-			//writeReg(0x0F, 0x00);
+			writeReg(0x0F, 0x00);
 			// gpio_set_value(GPIO_LED_STROBE,0);拉低strobe pin的操作转移disable函数中，否则会write reg fail
 			// writeReg(SGM3784_REG_MODE, 0xfa);	//Assist light mode with continuous LED current //0xea
 			writeReg(SGM3784_REG_MODE, 0xf8);	//【0xf8 LED_MOD = 000 To enable torch mode, set the LED_MOD bits to 000(standby mode) STR_MOD =1 硬触发】
 		
 			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
-				writeReg(SGM3784_REG_TIMING, 0xdf);
+				writeReg(SGM3784_REG_TIMING, 0xf8);
 			else
-				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0xff  //0xdf
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xf0|g_timeOutTimeMs_reg);	//0xff  //0xdf
 			writeReg(0x03, 0x0e);	//0X48  //0x0e
-			//setduty函数中已经对 SGM3784_REG_TORCH_LED1 SGM3784_REG_TORCH_LED2 配置上层传下来的duty电流
-			// writeReg(SGM3784_REG_TORCH_LED1, 0x03);	//led1 flash = 0
-			// writeReg(SGM3784_REG_TORCH_LED2, 0x03);	//led1 torch =0
 			writeReg(SGM3784_REG_ENABLE, 0x03);	//led1,led2 on
 			gpio_set_value(GPIO_LED_GPIO,1);//Torch Mode通过GPIO触发，同时set the LED_MOD bits to 000，没有延时，disable时只能通过计时器超时来拉低
 			// gpio_set_value(GPIO_LED_STROBE,1);//Assist Light Mode 不需要拉高strbo pin 关灯时只需要set the LED1_EN and LED2_EN bits to 0.【timeout如何控制？？上层马上就传cmd下来setOnOff(0)】
@@ -599,20 +585,17 @@ int flashEnable_SGM3784_2(void)
 
 		else
 		{
-			//writeReg(0x0F, 0x00);
+			writeReg(0x0F, 0x00);
 			// gpio_set_value(GPIO_LED_GPIO,0);;
-			writeReg(SGM3784_REG_MODE, 0xfb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB 
+			writeReg(SGM3784_REG_MODE, 0xeb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB 
 		
 			if(g_timeOutTimeMs_reg == 0)//vedio torch mode
-				writeReg(SGM3784_REG_TIMING, 0xdf);
+				writeReg(SGM3784_REG_TIMING, 0xc8);
 			else
-				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xd0|g_timeOutTimeMs_reg);	//0XEF  //0XDF //11011000
+				writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xc0|g_timeOutTimeMs_reg);	//0XEF  //0XDF //11011000
 			writeReg(0x03, 0x0e);	//0X48  //0X0E //00001110
-			//setduty函数中已经对SGM3784_REG_FLASH_LED1 SGM3784_REG_FLASH_LED2配置上层传下来的duty电流
-			// writeReg(SGM3784_REG_FLASH_LED1, 0x08);	//led1 flash=0  //LED1 Flash Current Register (Register 0x06)
-			// writeReg(SGM3784_REG_FLASH_LED2, 0x08);	//led1 torch =0 //LED2 Flash Current Register (Register 0x09)
 			writeReg(SGM3784_REG_ENABLE, 0x03);	//led1,led2 on
-			 gpio_set_value(GPIO_LED_STROBE,1);
+			//gpio_set_value(GPIO_LED_STROBE,1);
 			PK_DBG("flashEnable_SGM3784_2  ---6--- led1,led2 flash mode start t\n");
 		}
 	}
@@ -622,186 +605,22 @@ int flashEnable_SGM3784_2(void)
 
 int flashDisable_SGM3784_2(void)
 {
-	int temp;
-
-	//PK_DBG("flashDisable_SGM3784_2\n");
 	PK_DBG("zhouzhenshu---lijin---flashDisable_SGM3784_2 LED1Closeflag = %d, LED2Closeflag = %d\n", LED1Closeflag, LED2Closeflag);
 	
 	FlashIc_Enable();
 	writeReg(SGM3784_REG_ENABLE, 0x00);	
 	writeReg(SGM3784_REG_MODE, 0x00);
-	gpio_set_value(GPIO_LED_STROBE,0);
-	gpio_set_value(GPIO_LED_GPIO,0); //不分LED1 LED2?
+	writeReg(SGM3784_REG_TIMING, 0x00);
 	
-	return 0;
-
-	if((LED1Closeflag == 1) && (LED2Closeflag == 1))
-	{
-		writeReg(SGM3784_REG_ENABLE, 0x00);//close
-		g_Reg_First_write = 0;
-		//FlashIc_Disable();	
-		writeReg(SGM3784_REG_ENABLE, 0x00);	
-		writeReg(SGM3784_REG_MODE, 0x00);
-		gpio_set_value(GPIO_LED_STROBE,0);
-		gpio_set_value(GPIO_LED_GPIO,0);
-	}
-	else if(LED1Closeflag == 1)		//led1 close
-	{
-		PK_DBG("flashDisable_SGM3784_2 LED1Closeflag = 1 \n");
-		//PK_DBG("flashDisable_SGM3784_2 isMovieMode[0][m_duty2+1]=%d \n",isMovieMode[0][m_duty2+1]);
-		#if defined(USE_NEW_DRIVER)
-		if(isMovieModeLED2[m_duty2] == 1)
-		#else
-		//if(isMovieMode[0][m_duty2+1] == 1)
-		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
-		#endif
-		{
-			//writeReg(0x0F, 0x00);
-			 // gpio_set_value(GPIO_LED_STROBE,0);
-			//writeReg(0x01, 0xea);	////Assist light mode with continuous LED current //0xea
-			writeReg(SGM3784_REG_MODE, 0xfa);	////Assist light mode with continuous LED current //0xea
-			#if 1
-			temp = readReg(SGM3784_REG_TIMING);
-			if(temp != 0xFF)
-			{
-				writeReg(SGM3784_REG_TIMING, 0xFF);	
-			}
-			#else
-		        writeReg(SGM3784_REG_TIMING, 0xFF);	//0xff  //0xdf
-			#endif
-			writeReg(0x03, 0x48);	//0X48  //0x0e
-			writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash=0
-			writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 torch =0
-			writeReg(SGM3784_REG_ENABLE, 0x02);	//led2 on
-			gpio_set_value(GPIO_LED_GPIO,0);
-			PK_DBG("flashDisable_SGM3784_2 ---1--- LED1Closeflag = 1  led2 torch mode start temp=0x%x\n",temp);
-		}
-
-		else
-		{
-			//writeReg(0x0F, 0x00);
-			gpio_set_value(GPIO_LED_GPIO,0);
-			writeReg(0x01, 0xFB);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB
-			#if 1
-			temp = readReg(SGM3784_REG_TIMING);
-			if(temp != 0xCF)
-			{
-				writeReg(SGM3784_REG_TIMING, 0xCF);	
-			}
-			#else
-			writeReg(SGM3784_REG_TIMING, 0xCF);	//0XEF  //0XDF
-			#endif
-			writeReg(0x03, 0x48);	//0X48  //0X0E
-			writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash=0
-			writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 torch =0
-			writeReg(SGM3784_REG_ENABLE, 0x02);	//led2 on
-			gpio_set_value(GPIO_LED_STROBE,0);
-			PK_DBG("flashDisable_SGM3784_2  ---2--- LED1Closeflag = 1  led2 flash mode start temp=0x%x\n",temp);
-		};
-	}
-	else if(LED2Closeflag == 1)		//led2 close
-	{
-		PK_DBG("flashDisable_SGM3784_2 LED2Closeflag = 1 \n");
-		//PK_DBG("flashDisable_SGM3784_2 isMovieMode[m_duty1+1][0]=%d \n",isMovieMode[m_duty1+1][0]);
-		#if defined(USE_NEW_DRIVER)
-		if(isMovieModeLED1[m_duty1] == 1)
-		#else
-		//if(isMovieMode[m_duty1+1][0] == 1)
-		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
-		#endif
-		{
-			//writeReg(0x0F, 0x00);
-			 gpio_set_value(GPIO_LED_STROBE,0);
-			writeReg(SGM3784_REG_MODE, 0xea);	//Assist light mode with continuous LED current //0xea
-			#if 1
-			temp = readReg(SGM3784_REG_TIMING);
-			if(temp != 0xFF)
-			{
-				writeReg(SGM3784_REG_TIMING, 0xFF);	
-			}
-			#else
-		        writeReg(SGM3784_REG_TIMING, 0xFF);	//0xff  //0xdf
-			#endif
-			writeReg(0x03, 0x48);	//0X48  //0x0e
-			writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led2 flash=0
-			writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led2 torch =0
-			writeReg(SGM3784_REG_ENABLE, 0x01);	//led1 on
-			gpio_set_value(GPIO_LED_GPIO,0);
-			PK_DBG("flashDisable_SGM3784_2  ---3--- LED2Closeflag = 1  led1 torch mode start temp=0x%x\n",temp);
-		}
-
-		else
-		{
-			//writeReg(0x0F, 0x00);
-			gpio_set_value(GPIO_LED_GPIO,0);
-			writeReg(SGM3784_REG_MODE, 0xFB);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB
-			#if 1
-			temp = readReg(SGM3784_REG_TIMING);
-			if(temp != 0xCF)
-			{
-				writeReg(SGM3784_REG_TIMING, 0xCF);	
-			}
-			#else
-			writeReg(SGM3784_REG_TIMING, 0xCF);	//0XEF  //0XDF
-			#endif
-			writeReg(0x03, 0x48);	//0X48  //0X0E
-			writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led2 flash=0
-			writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led2 torch =0
-			writeReg(SGM3784_REG_ENABLE, 0x01);	//led1 on
-			 gpio_set_value(GPIO_LED_STROBE,0);
-			PK_DBG("flashDisable_SGM3784_2  ---4--- LED2Closeflag = 1  led1 flash mode start temp=0x%x\n",temp);
-		}
-
-	}
-	else
-	{
-		#if defined(USE_NEW_DRIVER)
-		if((isMovieModeLED1[m_duty1] == 1)&&(isMovieModeLED2[m_duty2] == 1))
-		#else
-		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
-		#endif
-		{
-			//writeReg(0x0F, 0x00);
-			 gpio_set_value(GPIO_LED_STROBE,0);
-			writeReg(SGM3784_REG_MODE, 0xea);	//Assist light mode with continuous LED current //0xea
-			#if 1
-			temp = readReg(SGM3784_REG_TIMING);
-			if(temp != 0xFF)
-			{
-				writeReg(SGM3784_REG_TIMING, 0xFF);	
-			}
-			#else
-		        writeReg(SGM3784_REG_TIMING, 0xFF);	//0xff  //0xdf
-			#endif
-			writeReg(0x03, 0x48);	//0X48  //0x0e
-			writeReg(SGM3784_REG_ENABLE, 0x03);	//led1,led2 on
-			gpio_set_value(GPIO_LED_GPIO,0);
-			PK_DBG("flashDisable_SGM3784_2  ---5--- led1,led2 torch mode start temp=0x%x\n",temp);
-		}
-
-		else
-		{
-			//writeReg(0x0F, 0x00);
-			gpio_set_value(GPIO_LED_GPIO,0);
-			writeReg(SGM3784_REG_MODE, 0xFB);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB
-			#if 1
-			temp = readReg(SGM3784_REG_TIMING);
-			if(temp != 0xCF)
-			{
-				writeReg(SGM3784_REG_TIMING, 0xCF);	
-			}
-			#else
-			writeReg(SGM3784_REG_TIMING, 0xCF);	//0XEF  //0XDF
-			#endif
-			writeReg(0x03, 0x48);	//0X48  //0X0E
-			writeReg(SGM3784_REG_ENABLE, 0x03);	//led1,led2 on
-			 gpio_set_value(GPIO_LED_STROBE,0);
-			PK_DBG("flashDisable_SGM3784_2 ---6---  led1,led2 flash mode start temp=0x%x\n",temp);
-		}
-
-	}
-
-	//PK_DBG("---lijin---flashDisable_SGM3784_2 m_duty1=%d,m_duty2=%d,LED1_TORCH=%d,LED1_FLASH=%d,LED2_TORCH=%d,LED2_FLASH=%d\n",m_duty1,m_duty2,readReg(0x08),readReg(0x06),readReg(0x0b),readReg(0x09));
+	writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash=0
+	writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 torch =0
+	
+	writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led2 flash=0
+	writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led2 torch =0
+	
+	gpio_set_value(GPIO_LED_STROBE,0);
+	gpio_set_value(GPIO_LED_GPIO,0); //不分LED1 LED2  如：LED1Closeflag=1的时候，灭LED1 LED2
+	
 	return 0;
 }
 
@@ -829,7 +648,7 @@ int setDuty_SGM3784_2(int duty)
 			writeReg(SGM3784_REG_TORCH_LED2,torchLED2Reg[m_duty2]);		//write value to led2 touch mode
 			PK_DBG("setDuty_SGM3784_2:----1----SGM3784_REG_TORCH_LED1 = %d, SGM3784_REG_TORCH_LED2 = %d\n", torchLED1Reg[0], torchLED1Reg[m_duty2]);
 			#else
-			writeReg(SGM3784_REG_TORCH_LED1,torchLED1Reg[m_duty1+1]);		//write value to led1 touch mode
+			writeReg(SGM3784_REG_TORCH_LED1,0x00);		//write value to led1 touch mode
 			writeReg(SGM3784_REG_TORCH_LED2,torchLED2Reg[m_duty2+1]);	//write value to led2 touch mode
 			PK_DBG("setDuty_SGM3784_2:----1------m_duty1 =%d m_duty2 =%d SGM3784_REG_TORCH_LED2 =%d\n", m_duty1,m_duty2, torchLED1Reg[m_duty2+1]);
 			#endif
@@ -841,7 +660,7 @@ int setDuty_SGM3784_2(int duty)
 			writeReg(SGM3784_REG_FLASH_LED2,flashLED2Reg[m_duty2]);			//write value to led2 flash mode
 			PK_DBG("setDuty_SGM3784_2:----2----SGM3784_REG_FLASH_LED1 = %d, SGM3784_REG_FLASH_LED2 = %d\n", flashLED1Reg[0], flashLED1Reg[m_duty2]);
 			#else
-			writeReg(SGM3784_REG_FLASH_LED1,flashLED1Reg[m_duty1+1]);			//write value to led1 flash mode
+			writeReg(SGM3784_REG_FLASH_LED1,0x00);			//write value to led1 flash mode
 			writeReg(SGM3784_REG_FLASH_LED2,flashLED2Reg[m_duty2+1]);	//write value to led2 flash mode
 			PK_DBG("setDuty_SGM3784_2:----2----m_duty1 =%d m_duty2 =%d, SGM3784_REG_FLASH_LED2 = %d\n",m_duty1, m_duty2,flashLED1Reg[m_duty2+1]);
 			#endif			
@@ -861,7 +680,7 @@ int setDuty_SGM3784_2(int duty)
 			PK_DBG("setDuty_SGM3784_2:----3----SGM3784_REG_TORCH_LED1 = %d, SGM3784_REG_TORCH_LED2 = %d\n", torchLED1Reg[m_duty1], torchLED1Reg[0]);
 			#else
 			writeReg(SGM3784_REG_TORCH_LED1,torchLED1Reg[m_duty1+1]);			//write value to led1 touch mode
-			writeReg(SGM3784_REG_TORCH_LED2,torchLED2Reg[m_duty2+1]);				//write value to led2 touch mode
+			writeReg(SGM3784_REG_TORCH_LED2,0x00);				//write value to led2 touch mode
 			PK_DBG("setDuty_SGM3784_2:----3----m_duty1 = %d m_duty2 %d,SGM3784_REG_TORCH_LED1 = %d\n", m_duty1,m_duty2,torchLED1Reg[m_duty1+1]);
 			#endif
 		}
@@ -873,7 +692,7 @@ int setDuty_SGM3784_2(int duty)
 			PK_DBG("setDuty_SGM3784_2:----4----SGM3784_REG_FLASH_LED1 = %d, SGM3784_REG_FLASH_LED2 = %d\n", flashLED1Reg[m_duty1], flashLED1Reg[0]);
 			#else
 			writeReg(SGM3784_REG_FLASH_LED1,flashLED1Reg[m_duty1+1]);			//write value to led1 flash mode
-			writeReg(SGM3784_REG_FLASH_LED2,flashLED2Reg[0]);				//write value to led2 flash mode			
+			writeReg(SGM3784_REG_FLASH_LED2,0x00);				//write value to led2 flash mode			
 			PK_DBG("setDuty_SGM3784_2:----4----m_duty1 = %d m_duty2 %d,SGM3784_REG_FLASH_LED1 = %d\n", m_duty1,m_duty2,flashLED1Reg[m_duty1+1]);
 			#endif
 		}		
@@ -947,6 +766,7 @@ int FL_Init(void)
 {
 	//int ret;
 	PK_DBG("LED1_FL_Init!\n");
+    FlashIc_Enable();
 
     INIT_WORK(&workTimeOut, work_timeOutFunc);
     PK_DBG(" FL_Init line=%d\n",__LINE__);
@@ -967,7 +787,7 @@ User interface
 
 static void work_timeOutFunc(struct work_struct *data)
 {
-    // FL_Disable();
+    FL_Disable();
     PK_DBG("LED1TimeOut_callback\n");
 }
 
@@ -1034,12 +854,12 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
     		PK_DBG("FLASH_IOC_SET_ONOFF LED1: %ld\n",arg);
     		if(arg==1)
     		{
-				// if(g_timeOutTimeMs!=0)
-	            // {
-	            	// ktime_t ktime;
-					// ktime = ktime_set( 0, g_timeOutTimeMs*1000000 );
-					// hrtimer_start( &g_timeOutTimer, ktime, HRTIMER_MODE_REL );
-	            // }
+				if(g_timeOutTimeMs!=0)
+	            {
+	            	ktime_t ktime;
+					ktime = ktime_set( 0, g_timeOutTimeMs*1000000 );
+					hrtimer_start( &g_timeOutTimer, ktime, HRTIMER_MODE_REL );
+	            }
 				LED1Closeflag = 0;
     			// FlashIc_Enable();
 				// FL_dim_duty(m_duty1);//调用setDuty_SGM3784_2 函数里面区分是LED1还是LED2
@@ -1050,8 +870,8 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
     			LED1Closeflag = 1;
     			// FlashIc_Enable();
 				// FL_dim_duty(m_duty1);
-				// FL_Disable(); //调用flashDisable_SGM3784_2 函数里面区分是LED1还是LED2
-				// hrtimer_cancel( &g_timeOutTimer );
+				FL_Disable(); //调用flashDisable_SGM3784_2 函数里面区分是LED1还是LED2
+				hrtimer_cancel( &g_timeOutTimer );
     		}
     		break;
     	case FLASH_IOC_SET_REG_ADR:
