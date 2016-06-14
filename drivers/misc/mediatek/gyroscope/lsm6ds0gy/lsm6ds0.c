@@ -571,9 +571,9 @@ static int LSM6DS0_ReadGyroData(struct i2c_client *client, char *buf, int bufsiz
 		obj->data[LSM6DS0_AXIS_Z] = (long)(obj->data[LSM6DS0_AXIS_Z]) * LSM6DS0_GYRO_SENSITIVITY_2000DPS*3142/(180*1000*1000); 
 	#endif
 			/*report degree/s */
-		obj->data[LSM6DS0_AXIS_X] = (long)(obj->data[LSM6DS0_AXIS_X])*LSM6DS0_GYRO_SENSITIVITY_2000DPS*131/1000/1000;
-		obj->data[LSM6DS0_AXIS_Y] = (long)(obj->data[LSM6DS0_AXIS_Y])*LSM6DS0_GYRO_SENSITIVITY_2000DPS*131/1000/1000;
-		obj->data[LSM6DS0_AXIS_Z] = (long)(obj->data[LSM6DS0_AXIS_Z])*LSM6DS0_GYRO_SENSITIVITY_2000DPS*131/1000/1000; 
+		obj->data[LSM6DS0_AXIS_X] = (long)(obj->data[LSM6DS0_AXIS_X])*131/1000;
+		obj->data[LSM6DS0_AXIS_Y] = (long)(obj->data[LSM6DS0_AXIS_Y])*131/1000;
+		obj->data[LSM6DS0_AXIS_Z] = (long)(obj->data[LSM6DS0_AXIS_Z])*131/1000; 
 
 		obj->data[LSM6DS0_AXIS_X] += obj->cali_sw[LSM6DS0_AXIS_X];
 		obj->data[LSM6DS0_AXIS_Y] += obj->cali_sw[LSM6DS0_AXIS_Y];
