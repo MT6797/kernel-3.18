@@ -2773,7 +2773,6 @@ static void mt_battery_update_status(void)
 #endif
 }
 
-
 CHARGER_TYPE mt_charger_type_detection(void)
 {
 	CHARGER_TYPE CHR_Type_num = CHARGER_UNKNOWN;
@@ -2785,7 +2784,7 @@ CHARGER_TYPE mt_charger_type_detection(void)
 	BMT_status.charger_type = CHR_Type_num;
 #else
 #if !defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
-	if (BMT_status.charger_type == CHARGER_UNKNOWN) {
+	if((BMT_status.charger_type == CHARGER_UNKNOWN)||(BMT_status.charger_type == NONSTANDARD_CHARGER)) {
 #else
 	if ((BMT_status.charger_type == CHARGER_UNKNOWN) &&
 	    (DISO_data.diso_state.cur_vusb_state == DISO_ONLINE)) {
@@ -2828,6 +2827,8 @@ CHARGER_TYPE mt_get_charger_type(void)
 #endif
 }
 
+#define MAX_RETRY_TIME 5
+
 static void mt_battery_charger_detect_check(void)
 {
 #ifdef CONFIG_MTK_BQ25896_SUPPORT
@@ -2838,6 +2839,7 @@ static void mt_battery_charger_detect_check(void)
 */
 		unsigned int pwr;
 #endif
+	unsigned int i = 0;
 	if (upmu_is_chr_det() == KAL_TRUE) {
 		wake_lock(&battery_suspend_lock);
 
@@ -2860,6 +2862,16 @@ static void mt_battery_charger_detect_check(void)
 		    (DISO_data.diso_state.cur_vusb_state == DISO_ONLINE)) {
 #endif
 			mt_charger_type_detection();
+			while(BMT_status.charger_type == NONSTANDARD_CHARGER)
+			{
+			    battery_log(BAT_LOG_FULL, "retry time [%d], BMT_status.charger_type=%d\n", i, BMT_status.charger_type);
+			    msleep(200);
+			    mt_charger_type_detection();
+			    if(i++ > MAX_RETRY_TIME)
+			    {
+			        break;
+			    }
+			}
 
 			if ((BMT_status.charger_type == STANDARD_HOST)
 			    || (BMT_status.charger_type == CHARGING_HOST)) {
