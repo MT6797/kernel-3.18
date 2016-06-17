@@ -568,6 +568,7 @@ static long flashlight_ioctl_core(struct file *file, unsigned int cmd, unsigned 
 			logI("FLASH_IOC_GET_PART_ID line=%d partId=%d", __LINE__, partId);
 		}
 		break;
+	case FLASH_IOC_SET_DUTY:
 	case FLASH_IOC_SET_ONOFF:
 		{
 			FLASHLIGHT_FUNCTION_STRUCT *pF;

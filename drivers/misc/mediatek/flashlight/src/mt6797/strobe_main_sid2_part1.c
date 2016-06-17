@@ -47,7 +47,10 @@
 #define TAG_NAME "[strobe_main_sid2_part1.c]"
 #define PK_DBG_FUNC(fmt, arg...)    pr_debug(TAG_NAME "%s: " fmt, __func__ , ##arg)
 
-/*#define DEBUG_LEDS_STROBE*/
+#define LED1_WARM
+// #define LED1_COLD
+
+#define DEBUG_LEDS_STROBE
 #ifdef DEBUG_LEDS_STROBE
 #define PK_DBG PK_DBG_FUNC
 #else
@@ -60,7 +63,7 @@
 static DEFINE_SPINLOCK(g_strobeSMPLock);	/* cotta-- SMP proection */
 static struct work_struct workTimeOut;
 static int g_timeOutTimeMs; 
-extern int g_timeOutTimeMs_reg;//led1 led2¹²ÓÃÒ»¸öFL_TIM
+extern int g_timeOutTimeMs_reg;//led1 led2å…±ç”¨ä¸€ä¸ªFL_TIM
 static u32 strobe_Res;
 /*****************************************************************************
 Functions
@@ -70,27 +73,43 @@ static void work_timeOutFunc(struct work_struct *data);
 extern int flashEnable_SGM3784_2(void);
 extern int flashDisable_SGM3784_2(void);
 extern int setDuty_SGM3784_2(int duty);
+extern int flashEnable_SGM3784_1(void);
+extern int flashDisable_SGM3784_1(void);
+extern int setDuty_SGM3784_1(int duty);
 extern int FlashIc_Enable(void);
 extern int FlashIc_Disable(void);
 extern int m_duty1;	//add by lijin 2015.5.13
 extern int m_duty2;
+extern int LED1Closeflag;
 extern int LED2Closeflag;
 static int FL_Enable(void)
 {
+#ifdef LED1_WARM
+    flashEnable_SGM3784_1();
+#else
     flashEnable_SGM3784_2();
+#endif
 	PK_DBG("FL_Enable-");
 	return 0;
 }
 
 static int FL_Disable(void)
 {
+#ifdef LED1_WARM
+    flashDisable_SGM3784_1();
+#else
     flashDisable_SGM3784_2();
+#endif
 	return 0;
 }
 
 static int FL_dim_duty(kal_uint32 duty)
 {
+#ifdef LED1_WARM
+    setDuty_SGM3784_1(duty);
+#else
     setDuty_SGM3784_2(duty);
+#endif
 	return 0;
 }
 
@@ -190,23 +209,34 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
 
 	case FLASH_IOC_SET_TIME_OUT_TIME_MS:
 			// if(arg>1600)
-				// arg= 1600;//×î´óÖ§³Ö1.6ÃëÁÁµÆ
-			g_timeOutTimeMs_reg=arg/100;//Ô¤ÉÁµÄÊ±¼ä³¤Ò»µã ¼ÆËãÖ÷ÉÁµÄdutyÖµ¾Í»á¸ü×¼È· 
-			if(g_timeOutTimeMs_reg>16)
-				g_timeOutTimeMs_reg = 16;
-			g_timeOutTimeMs = arg;//ÓÃÓÚ¸øtorch modeµÄÁÁµÆ¼ÆÊ±
+				// arg= 1600;//æœ€å¤§æ”¯æŒ1.6ç§’äº®ç¯
+			// g_timeOutTimeMs_reg=arg/100-1;//é¢„é—ªçš„æ—¶é—´é•¿ä¸€ç‚¹ è®¡ç®—ä¸»é—ªçš„dutyå€¼å°±ä¼šæ›´å‡†ç¡® 
+			// if(g_timeOutTimeMs_reg>15)
+				// g_timeOutTimeMs_reg = 15;
+			g_timeOutTimeMs = arg;//ç”¨äºç»™torch modeçš„äº®ç¯è®¡æ—¶
+			#ifdef LED1_WARM
+			PK_DBG("FLASH_IOC_SET_TIME_OUT_TIME_MS LED1: %ld g_timeOutTimeMs_reg=0x%x \n",arg,g_timeOutTimeMs_reg);
+			#else
 			PK_DBG("FLASH_IOC_SET_TIME_OUT_TIME_MS LED2: %ld g_timeOutTimeMs_reg=0x%x \n",arg,g_timeOutTimeMs_reg);
+			#endif
 		break;
 
 
 	case FLASH_IOC_SET_DUTY:
+		#ifdef LED1_WARM
+		PK_DBG("FLASH_IOC_SET_DUTY LED1: %d\n", (int)arg);
+		#else
 		PK_DBG("FLASH_IOC_SET_DUTY LED2: %d\n", (int)arg);
+		#endif
 		// if(arg < 0)
 			// arg = 0;
 		// if(arg>=/* e_DutyNum */16)
 			// arg=16-1;
-		
+		#ifdef LED1_WARM
+		m_duty1 = arg;
+		#else
 		m_duty2 = arg;
+		#endif
 		break;
 
 
@@ -216,33 +246,52 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
 		break;
 
 	case FLASH_IOC_SET_ONOFF:
+		#ifdef LED1_WARM
+		PK_DBG("FLASH_IOC_SET_ONOFF LED1: %d\n", (int)arg);
+		#else
 		PK_DBG("FLASH_IOC_SET_ONOFF LED2: %d\n", (int)arg);
+		#endif
 		if (arg == 1) {
-			if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
-			{//torch modeµÄtimeout timeÊ¹ÓÃÄÚºË¼ÆÊ±Æ÷£¬³¬Ê±µ÷ÓÃFL_Disableº¯ÊıÀ­µÍGPIO½Å£¬²¢set LEDx_EN 0
-				if (g_timeOutTimeMs != 0) {
-					ktime_t ktime;
-	
-					ktime = ktime_set(0, g_timeOutTimeMs * 1000000);
-					hrtimer_start(&g_timeOutTimer, ktime, HRTIMER_MODE_REL);
-				}				
+			if (g_timeOutTimeMs != 0) {
+				ktime_t ktime;
+			
+				ktime = ktime_set(0, g_timeOutTimeMs * 1000000);
+				hrtimer_start(&g_timeOutTimer, ktime, HRTIMER_MODE_REL);
 			}
+			#ifdef LED1_WARM
+			LED1Closeflag = 0;//äº®æš–ç¯
+			#else
 			LED2Closeflag = 0;
+			#endif
+			FlashIc_Enable();//flashEnable_SGM3784_2();
+			#ifdef LED1_WARM
+			FL_dim_duty(m_duty1);
+			#else
+			FL_dim_duty(m_duty2);
+			#endif
+			FL_Enable();
+			// #ifdef LED1_WARM
+			// setDuty_SGM3784_1(m_duty1);
+			// flashEnable_SGM3784_1();
+			// #else
+			// setDuty_SGM3784_2(m_duty2);//è°ƒç”¨setDuty_SGM3784_2 å‡½æ•°é‡Œé¢åŒºåˆ†æ˜¯LED1è¿˜æ˜¯LED2
+			// flashEnable_SGM3784_2();//è°ƒç”¨flashEnable_SGM3784_2 å‡½æ•°é‡Œé¢åŒºåˆ†æ˜¯LED1è¿˜æ˜¯LED2//è®¾ç½®timeout time g_timeOutTimeMs_reg
+			// #endif
+		}
+		else{
+			#ifdef LED1_WARM
+			LED1Closeflag = 1;//ç­æš–ç¯
+			#else
+			LED2Closeflag = 1;
+			#endif
 			FlashIc_Enable();
-//flashEnable_SGM3784_2();
-			FL_dim_duty(m_duty2);//µ÷ÓÃsetDuty_SGM3784_2 º¯ÊıÀïÃæÇø·ÖÊÇLED1»¹ÊÇLED2
-			FL_Enable();//µ÷ÓÃflashEnable_SGM3784_2 º¯ÊıÀïÃæÇø·ÖÊÇLED1»¹ÊÇLED2//ÉèÖÃtimeout time g_timeOutTimeMs_reg
-    		}
-    		else
-    		{
-    			LED2Closeflag = 1;
-			//FlashIc_Enable();
 			//FL_dim_duty(m_duty2);
-			// if(isMovieMode[m_duty1+1][m_duty2+1] != 1)
-			{//torch modeÊ±£¬Í¨¹ı¼ÆÊ±Æ÷³¬Ê±µ÷ÓÃFL_Disable
-				FL_Disable(); //work_timeOutFuncº¯ÊıÖĞµ÷ÓÃ£¬µ«ÊÇÕâÀï×¢ÊÍµôµÄ»°£¬Ğ£×¼µÄÊ±ºò²»´òÉÁ //disable flash mode  µ÷ÓÃflashDisable_SGM3784_2				
-			}
-			// else
+			FL_Disable();
+			// #ifdef LED1_WARM
+			// flashDisable_SGM3784_1();
+			// #else
+			// flashDisable_SGM3784_2(); //work_timeOutFuncå‡½æ•°ä¸­è°ƒç”¨ï¼Œä½†æ˜¯è¿™é‡Œæ³¨é‡Šæ‰çš„è¯ï¼Œæ ¡å‡†çš„æ—¶å€™ä¸æ‰“é—ª //disable flash mode  è°ƒç”¨flashDisable_SGM3784_2				
+			// #endif
 			hrtimer_cancel(&g_timeOutTimer);
 		}
 		break;
