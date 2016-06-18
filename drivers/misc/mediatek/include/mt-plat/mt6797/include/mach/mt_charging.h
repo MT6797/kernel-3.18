@@ -30,7 +30,7 @@
 /* Linear Charging Threshold */
 #define V_PRE2CC_THRES			3400	/* mV */
 #define V_CC2TOPOFF_THRES		4352
-#define RECHARGING_VOLTAGE      4110
+#define RECHARGING_VOLTAGE      4300
 #define CHARGING_FULL_CURRENT    150	/* mA */
 
 /* Charging Current Setting */
@@ -51,7 +51,11 @@
 
 
 /* Precise Tunning */
+#if defined(USER_BUILD_KERNEL)
 #define BATTERY_AVERAGE_DATA_NUMBER	3
+#else
+#define BATTERY_AVERAGE_DATA_NUMBER	2
+#endif
 #define BATTERY_AVERAGE_SIZE	30
 
 /* charger error check */
@@ -79,7 +83,7 @@
 /* JEITA parameter */
 /* #define MTK_JEITA_STANDARD_SUPPORT */
 #define CUST_SOC_JEITA_SYNC_TIME 30
-#define JEITA_RECHARGE_VOLTAGE  4110	/* for linear charging */
+#define JEITA_RECHARGE_VOLTAGE  4300	/* for linear charging */
 #ifdef HIGH_BATTERY_VOLTAGE_SUPPORT
 #define JEITA_TEMP_ABOVE_POS_60_CV_VOLTAGE		BATTERY_VOLT_04_240000_V
 #define JEITA_TEMP_POS_45_TO_POS_60_CV_VOLTAGE		BATTERY_VOLT_04_240000_V

@@ -2181,7 +2181,7 @@ static void mt_battery_average_method_init(BATTERY_AVG_ENUM type, unsigned int *
 	static kal_bool previous_charger_exist = KAL_FALSE;
 	static kal_bool previous_in_recharge_state = KAL_FALSE;
 
-	static unsigned char index;
+	static unsigned char index = 0;
 
 	/* reset charging current window while plug in/out { */
 	if (type == BATTERY_AVG_CURRENT) {
@@ -2255,6 +2255,8 @@ static void mt_battery_average_method_init(BATTERY_AVG_ENUM type, unsigned int *
 }
 
 
+
+
 static unsigned int mt_battery_average_method(BATTERY_AVG_ENUM type, unsigned int *bufferdata,
 					    unsigned int data, signed int *sum,
 					    unsigned char batteryIndex)
@@ -2276,14 +2278,14 @@ void mt_battery_GetBatteryData(void)
 {
 	unsigned int bat_vol, charger_vol, Vsense, ZCV;
 	signed int ICharging, temperature, temperatureR, temperatureV, SOC;
-	static signed int bat_sum, icharging_sum;//, temperature_sum;
+	static signed int bat_sum = 0, icharging_sum = 0;//, temperature_sum;
 	static signed int batteryVoltageBuffer[BATTERY_AVERAGE_SIZE];
 	static signed int batteryCurrentBuffer[BATTERY_AVERAGE_SIZE];
 	#if defined(USER_BUILD_KERNEL)
 	static signed int batteryTempBuffer[BATTERY_AVERAGE_SIZE];
-	static signed int temperature_sum;
+	static signed int temperature_sum = 0;
 	#endif
-	static unsigned char batteryIndex = 0xff;
+	static unsigned char batteryIndex = 0;
 	static signed int previous_SOC = -1;
 
 	bat_vol = battery_meter_get_battery_voltage(KAL_TRUE);
@@ -2377,7 +2379,6 @@ void mt_battery_GetBatteryData(void)
 		    BMT_status.bat_vol, bat_vol, BMT_status.ICharging, ICharging,
 		    BMT_status.charger_vol, BMT_status.temperature, temperature,
 		    previous_SOC, BMT_status.SOC, BMT_status.ZCV);
-
 
 }
 

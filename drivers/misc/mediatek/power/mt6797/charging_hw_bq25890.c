@@ -268,10 +268,10 @@ static unsigned int charging_hw_init(void *data)
 	/*CV mode */
 	bq25890_config_interface(bq25890_CON6, 0x0, 0x1, 0);	/* recharge voltage@VRECHG=CV-100MV */
 	bq25890_config_interface(bq25890_CON7, 0x1, 0x1, 7);	/* disable ICHG termination detect */
-	bq25890_config_interface(bq25890_CON5, 0x1, 0x7, 0);	/* termianation current default 128mA */
+	bq25890_config_interface(bq25890_CON5, 0x2, 0x7, 0);	/* termianation current default 128mA */
 	#ifdef CONFIG_BATTERY_HIGH_VOLTAGE
 	if(CONFIG_BATTERY_HIGH_VOLTAGE == 4350)
-		bq25890_config_interface(bq25890_CON6, 0x1f, 0x3F, 2);//offset = 3.84V
+		bq25890_config_interface(bq25890_CON6, 0x20, 0x3F, 2);//offset = 3.84V
 	#endif
 
 
@@ -364,11 +364,22 @@ static unsigned int charging_get_current(void *data)
 	unsigned int array_size;
 	/*unsigned char reg_value; */
 	unsigned int val;
+        unsigned int i = 0, sum_current = 0;
+        unsigned int currentArray[7] = {50, 100, 200, 400, 800, 1600, 3200};
 
 	/*Get current level */
 	array_size = GETARRAYNUM(CS_VTH);
 	val = bq25890_get_ichg();
-	*(unsigned int *) data = val;
+        val &= 0x7F;
+        for(i = 0; i < 7; i++)
+        {
+            sum_current += ((val >> i) & 0x01) * currentArray[i];
+        }
+ 
+        printk("[%s %d]------------------call dump_stack---------current_value = %dmA register_value = 0x%x--------------\n\n\n\n",__FUNCTION__,__LINE__,sum_current,val);
+//        dump_stack();
+        *(unsigned int *) data = sum_current;
+
 	/* *(unsigned int *)data = charging_value_to_parameter(CS_VTH,array_size,val); */
 
 	return status;
@@ -389,7 +400,7 @@ static unsigned int charging_set_current(void *data)
 	/* bq25890_config_interface(bq25890_CON4, register_value, 0x7F, 0); */
 	
 	printk("[%s %d]------------------call dump_stack---------current_value = %d register_value = 0x%x--------------\n\n\n\n",__FUNCTION__,__LINE__,current_value,register_value);
-	dump_stack();
+//	dump_stack();
 	
 	bq25890_set_ichg(register_value);
 	/*For USB_IF compliance test only when USB is in suspend(Ibus < 2.5mA) or unconfigured(Ibus < 70mA) states*/
@@ -431,7 +442,7 @@ static unsigned int charging_set_input_current(void *data)
 	
 	
 	printk("[%s %d]------------------call dump_stack----------current_value = %d register_value = 0x%x---------------\n\n\n\n",__FUNCTION__,__LINE__,current_value,register_value);
-	dump_stack();
+//	dump_stack();
 	
 	bq25890_set_iinlim(register_value);
 

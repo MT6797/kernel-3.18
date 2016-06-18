@@ -296,7 +296,7 @@ static void mtk_ta_reset_vchr(void)
 	battery_log(BAT_LOG_CRTI, "[PE+]mtk_ta_reset_vchr(): reset Vchr to 5V\n");
 }
 
-bool charge_suspend = KAL_FALSE;
+bool charge_suspend = KAL_TRUE;
 static void mtk_ta_increase(void)
 {
 	kal_bool ta_current_pattern = KAL_TRUE;	/* TRUE = increase */
@@ -1066,7 +1066,7 @@ void select_charging_current(void)
 			g_temp_CC_value = batt_cust_data.ac_charger_current;
 			if(charge_suspend == false){//降低亮屏充电电流为5V1A 控制充电发热
 				g_temp_input_CC_value = 100000;
-				g_temp_CC_value = 100000;
+				g_temp_CC_value = 200000;
 			}
 #if defined(CONFIG_MTK_PUMP_EXPRESS_PLUS_SUPPORT)
 			if (is_ta_connect == KAL_TRUE)

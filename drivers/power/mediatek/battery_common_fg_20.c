@@ -1989,7 +1989,7 @@ static void mt_battery_average_method_init(BATTERY_AVG_ENUM type, unsigned int *
 	static kal_bool batteryBufferFirst = KAL_TRUE;
 	static kal_bool previous_charger_exist = KAL_FALSE;
 	static kal_bool previous_in_recharge_state = KAL_FALSE;
-	static unsigned char index;
+	static unsigned char index = 0;
 
 	/* reset charging current window while plug in/out { */
 	if (type == BATTERY_AVG_CURRENT) {
