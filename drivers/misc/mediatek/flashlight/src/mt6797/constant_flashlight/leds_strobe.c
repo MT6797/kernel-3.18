@@ -567,13 +567,13 @@ int setDuty_SGM3784_1(int duty)
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		{
 			writeReg(SGM3784_REG_TORCH_LED1,torchLED1Reg[m_duty1+1]);			//write value to led1 touch mode
-			writeReg(SGM3784_REG_FLASH_LED1,0x00);				//write value to led2 touch mode
+			writeReg(SGM3784_REG_FLASH_LED1,0x00);				//write value to led2 flash mode
 			PK_DBG("setDuty_SGM3784_2:----3----m_duty1 = %d m_duty2 %d,SGM3784_REG_TORCH_LED1 = %d\n", m_duty1,m_duty2,torchLED1Reg[m_duty1+1]);
 		}
 		else
 		{
+			writeReg(SGM3784_REG_TORCH_LED1,0x00);				//write value to led1 touch mode			
 			writeReg(SGM3784_REG_FLASH_LED1,flashLED1Reg[m_duty1+1]);			//write value to led1 flash mode
-			writeReg(SGM3784_REG_TORCH_LED1,0x00);				//write value to led2 flash mode			
 			PK_DBG("setDuty_SGM3784_2:----4----m_duty1 = %d m_duty2 %d,SGM3784_REG_FLASH_LED1 = %d\n", m_duty1,m_duty2,flashLED1Reg[m_duty1+1]);
 		}		
 	}
@@ -1043,14 +1043,14 @@ int setDuty_SGM3784_2(int duty)
 	{
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)		//TORCH 
 		{
-			writeReg(SGM3784_REG_FLASH_LED2,0x00);		//write value to led1 touch mode
+			writeReg(SGM3784_REG_FLASH_LED2,0x00);		//write value to led2 flash mode
 			writeReg(SGM3784_REG_TORCH_LED2,torchLED2Reg[m_duty2+1]);	//write value to led2 touch mode
 			PK_DBG("setDuty_SGM3784_2:----1------m_duty1 =%d m_duty2 =%d SGM3784_REG_TORCH_LED2 =%d\n", m_duty1,m_duty2, torchLED1Reg[m_duty2+1]);
 		}
 		else									//FLASH
 		{
-			writeReg(SGM3784_REG_FLASH_LED2,0x00);			//write value to led1 flash mode
-			writeReg(SGM3784_REG_TORCH_LED2,flashLED2Reg[m_duty2+1]);	//write value to led2 flash mode
+			writeReg(SGM3784_REG_FLASH_LED2,flashLED2Reg[m_duty2+1]);			//write value to led2 flash mode
+			writeReg(SGM3784_REG_TORCH_LED2,0x00);	//write value to led2 torch mode
 			PK_DBG("setDuty_SGM3784_2:----2----m_duty1 =%d m_duty2 =%d, SGM3784_REG_FLASH_LED2 = %d\n",m_duty1, m_duty2,flashLED1Reg[m_duty2+1]);
 		}
 	}
