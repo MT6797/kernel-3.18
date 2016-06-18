@@ -175,8 +175,8 @@ static int SGM3784_write_reg(struct i2c_client *client, u8 reg, u8 val)
 
 	if (ret < 0)
 		PK_ERR("failed writting at 0x%02x\n", reg);
-	else
-		PK_ERR("writting at 0x%02x successful\n", reg);
+	// else
+		// PK_ERR("writting at 0x%02x successful\n", reg);
 	return ret;
 }
 
@@ -317,7 +317,7 @@ int readReg(int reg)
 #if 1
     int val;
     val = SGM3784_read_reg(SGM3784_i2c_client, reg);
-	PK_DBG("read reg=%x val=%x\n", reg,val);
+	// PK_DBG("read reg=%x val=%x\n", reg,val);
     return (int)val;
 #else	
 
@@ -352,7 +352,7 @@ int writeReg(int reg, int val)
     else
     {
     	    err = SGM3784_write_reg(SGM3784_i2c_client, reg, val);
-			readReg(reg);
+			// readReg(reg);
 	    return (int)val;
     }
 #else	
@@ -427,10 +427,10 @@ int LED2Closeflag = 0;
 char g_EnableReg = 0;
 char g_ModeReg = 0;
 char g_TimeReg = 0;
-char g_FlashReg1 = 0;
-char g_FlashReg2 = 0;
-char g_TorchReg1 = 0;
-char g_TorchReg2 = 0;
+// char g_FlashReg1 = 0;
+// char g_FlashReg2 = 0;
+// char g_TorchReg1 = 0;
+// char g_TorchReg2 = 0;
 
 int FlashIc_Enable(void)
 {
@@ -470,15 +470,15 @@ int flashEnable_SGM3784_1(void)
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		{
 			g_EnableReg = readReg(SGM3784_REG_ENABLE);
-			// writeReg(SGM3784_REG_ENABLE, 0x00);//暖灯在冷灯打闪之后灭灯之前需要打闪的情况下 这个寄存器需要清空才能改变工作模式
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+
 			writeReg(SGM3784_REG_MODE, 0xea);
 			writeReg(SGM3784_REG_TIMING, 0xf0);
-			writeReg(0x03, 0x0e);
-			
-			g_FlashReg2 = readReg(SGM3784_REG_FLASH_LED2);
-			g_TorchReg2 = readReg(SGM3784_REG_TORCH_LED2);
-			writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led2 flash = 0
-			writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led2 torch =0
+			writeReg(0x03, 0x48);
 			
 			writeReg(SGM3784_REG_ENABLE, g_EnableReg|0x01);	//led1 on
 			PK_DBG("zhouzhenshu flashEnable_SGM3784_1 ---1--- LED2Closeflag = 1  led1 torch mode start\n");
@@ -486,15 +486,15 @@ int flashEnable_SGM3784_1(void)
 		else
 		{
 			g_EnableReg = readReg(SGM3784_REG_ENABLE);
-			// writeReg(SGM3784_REG_ENABLE, 0x00);//暖灯在冷灯打闪之后灭灯之前需要打闪的情况下 这个寄存器需要清空才能改变工作模式
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+
 			writeReg(SGM3784_REG_MODE, 0xeb);
-			writeReg(SGM3784_REG_TIMING, 0xc5);//600ms
-			writeReg(0x03, 0x0e);
-			
-			g_FlashReg2 = readReg(SGM3784_REG_FLASH_LED2);
-			g_TorchReg2 = readReg(SGM3784_REG_TORCH_LED2);
-			writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led2 flash = 0
-			writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led2 torch =0
+			writeReg(SGM3784_REG_TIMING, 0xc2);//600ms
+			writeReg(0x03, 0x48);
 			
 			writeReg(SGM3784_REG_ENABLE, g_EnableReg|0x01);	//led1 on
 			PK_DBG("zhouzhenshu flashEnable_SGM3784_1 ---1--- LED2Closeflag = 1  led1 flash mode start\n");
@@ -507,8 +507,14 @@ int flashEnable_SGM3784_1(void)
 		//flash calibration时，暖灯打闪，dutyLT=0..15，冷灯打闪且duty由0增加到15
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		{
-			g_EnableReg = readReg(SGM3784_REG_ENABLE);
-			// writeReg(SGM3784_REG_ENABLE, 0x00);
+			g_EnableReg = readReg(SGM3784_REG_ENABLE);			
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			// readReg(SGM3784_REG_TORCH_LED2);
+			
 			// gpio_set_value(GPIO_LED_STROBE,0);拉低strobe pin的操作转移disable函数中，否则会write reg fail
 			writeReg(SGM3784_REG_MODE, 0xea);//LED_MOD = 010 灭灯时不需要GPIO参与 开灯使用软触发
 		
@@ -516,7 +522,7 @@ int flashEnable_SGM3784_1(void)
 				writeReg(SGM3784_REG_TIMING, 0xf0);
 			// else
 				// writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xf0|g_timeOutTimeMs_reg);	//0xff  //0xdf
-			writeReg(0x03, 0x0e);	//0X48  //0x0e
+			writeReg(0x03, 0x48);	//0X48  //0x0e
 			writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash=0
 			writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led2 flash=0
 			writeReg(SGM3784_REG_ENABLE, g_EnableReg|0x03);	//led1,led2 on
@@ -527,15 +533,20 @@ int flashEnable_SGM3784_1(void)
 		else
 		{
 			g_EnableReg = readReg(SGM3784_REG_ENABLE);
-			// writeReg(SGM3784_REG_ENABLE, 0x00);
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			// gpio_set_value(GPIO_LED_GPIO,0);;
 			writeReg(SGM3784_REG_MODE, 0xeb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB 
 		
 			// if(g_timeOutTimeMs_reg == 0)//vedio torch mode
-				writeReg(SGM3784_REG_TIMING, 0xc5);
+				writeReg(SGM3784_REG_TIMING, 0xc2);
 			// else
 				// writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xc0|g_timeOutTimeMs_reg);	//0XEF  //0XDF //11011000
-			writeReg(0x03, 0x0e);	//0X48  //0X0E //00001110
+			writeReg(0x03, 0x48);	//0X48  //0X0E //00001110
 			writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 torch=0
 			writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led2 torch=0
 			writeReg(SGM3784_REG_ENABLE, g_EnableReg|0x03);	//led1,led2 on
@@ -543,7 +554,7 @@ int flashEnable_SGM3784_1(void)
 			PK_DBG("zhouzhenshu flashEnable_SGM3784_2  ---6--- led1,led2 flash mode start t\n");
 		}
 		#endif
-		PK_DBG("---lijin---flashEnable_SGM3784_2 m_duty1=%d,m_duty2=%d,LED1_TORCH=%d,LED1_FLASH=%d,LED2_TORCH=%d,LED2_FLASH=%d\n",m_duty1,m_duty2,readReg(0x08),readReg(0x06),readReg(0x0b),readReg(0x09));
+		// PK_DBG("---lijin---flashEnable_SGM3784_2 m_duty1=%d,m_duty2=%d,LED1_TORCH=%d,LED1_FLASH=%d,LED2_TORCH=%d,LED2_FLASH=%d\n",m_duty1,m_duty2,readReg(0x08),readReg(0x06),readReg(0x0b),readReg(0x09));
 		return 0;		
 	}
 	return 0;
@@ -616,16 +627,16 @@ int flashEnable_SGM3784_2(void)
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		{
 			g_EnableReg = readReg(SGM3784_REG_ENABLE);
-			// writeReg(SGM3784_REG_ENABLE, 0x00);//先把0x0F寄存器写成0x00，注意这里这么做的原因：0x01, 0x02寄存器在系统工作过程中不允许修改，当把0x0F写成0x00，系统被软关闭，此时可以修改0x01, 0x02寄存器。
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			// gpio_set_value(GPIO_LED_STROBE,0);
 			writeReg(SGM3784_REG_MODE, 0xea);//LED_MOD = 010 灭灯时不需要GPIO参与 开灯使用软触发
 			writeReg(SGM3784_REG_TIMING, 0xf0);
-			writeReg(0x03, 0x0e);	//0X48  //0x0e
-			
-			g_FlashReg1 = readReg(SGM3784_REG_FLASH_LED1);
-			g_TorchReg1 = readReg(SGM3784_REG_TORCH_LED1);
-			writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash = 0
-			writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 torch =0
+			writeReg(0x03, 0x48);	//0X48  //0x0e
 			
 			writeReg(SGM3784_REG_ENABLE, g_EnableReg|0x02);	//led2 on
 			 // gpio_set_value(GPIO_LED_GPIO,1);//Torch Mode通过GPIO触发，同时set the LED_MOD bits to 000，没有延时，disable时只能通过计时器超时来拉低
@@ -636,19 +647,21 @@ int flashEnable_SGM3784_2(void)
 		else
 		{
 			g_EnableReg = readReg(SGM3784_REG_ENABLE);
-			// writeReg(SGM3784_REG_ENABLE, 0x00);
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			// gpio_set_value(GPIO_LED_GPIO,0);
 			writeReg(SGM3784_REG_MODE, 0xeb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB
 
 			// if(g_timeOutTimeMs_reg == 0)//vedio torch mode
-				writeReg(SGM3784_REG_TIMING, 0xc5);
+				writeReg(SGM3784_REG_TIMING, 0xc2);
 			// else
 				// writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xc0|g_timeOutTimeMs_reg);	//0XEF  //0XDF
-			writeReg(0x03, 0x0e);	//0X48  //0X0E
-			g_FlashReg1 = readReg(SGM3784_REG_FLASH_LED1);
-			g_TorchReg1 = readReg(SGM3784_REG_TORCH_LED1);
-			writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash=0 //setduty里面已经赋值
-			writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 torch =0
+			writeReg(0x03, 0x48);	//0X48  //0X0E
+			
 			writeReg(SGM3784_REG_ENABLE, g_EnableReg|0x02);	//led2 on
 			//gpio_set_value(GPIO_LED_STROBE,1);
 			PK_DBG("zhouzhenshu flashEnable_SGM3784_2 ---2--- LED1Closeflag = 1  led2 flash mode start\n");
@@ -669,7 +682,12 @@ int flashEnable_SGM3784_2(void)
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		{
 			g_EnableReg = readReg(SGM3784_REG_ENABLE);
-			// writeReg(SGM3784_REG_ENABLE, 0x00);
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			// gpio_set_value(GPIO_LED_STROBE,0);拉低strobe pin的操作转移disable函数中，否则会write reg fail
 			writeReg(SGM3784_REG_MODE, 0xea);//LED_MOD = 010 灭灯时不需要GPIO参与 开灯使用软触发
 		
@@ -677,7 +695,7 @@ int flashEnable_SGM3784_2(void)
 				writeReg(SGM3784_REG_TIMING, 0xf0);
 			// else
 				// writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xf0|g_timeOutTimeMs_reg);	//0xff  //0xdf
-			writeReg(0x03, 0x0e);	//0X48  //0x0e
+			writeReg(0x03, 0x48);	//0X48  //0x0e
 			writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash=0
 			writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led2 flash=0
 			writeReg(SGM3784_REG_ENABLE, g_EnableReg|0x03);	//led1,led2 on
@@ -688,15 +706,17 @@ int flashEnable_SGM3784_2(void)
 		else
 		{
 			g_EnableReg = readReg(SGM3784_REG_ENABLE);
-			// writeReg(SGM3784_REG_ENABLE, 0x00);
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			// gpio_set_value(GPIO_LED_GPIO,0);;
 			writeReg(SGM3784_REG_MODE, 0xeb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB 
-		
-			// if(g_timeOutTimeMs_reg == 0)//vedio torch mode
-				writeReg(SGM3784_REG_TIMING, 0xc5);
-			// else
-				// writeReg(SGM3784_REG_TIMING, /* 0xd8 */0xc0|g_timeOutTimeMs_reg);	//0XEF  //0XDF //11011000
-			writeReg(0x03, 0x0e);	//0X48  //0X0E //00001110
+			
+			writeReg(SGM3784_REG_TIMING, 0xc2);
+			writeReg(0x03, 0x48);	//0X48  //0X0E //00001110
 			writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 torch=0
 			writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led2 torch=0
 			writeReg(SGM3784_REG_ENABLE, g_EnableReg|0x03);	//led1,led2 on
@@ -707,30 +727,6 @@ int flashEnable_SGM3784_2(void)
 		return 0;
 	}
 	// PK_DBG("---lijin---flashEnable_SGM3784_2 m_duty1=%d,m_duty2=%d,LED1_TORCH=%d,LED1_FLASH=%d,LED2_TORCH=%d,LED2_FLASH=%d\n",m_duty1,m_duty2,readReg(0x08),readReg(0x06),readReg(0x0b),readReg(0x09));
-	return 0;
-}
-
-//disable时不需要区分torch和flash，区分LED1和LED2
-int flashDisable_SGM3784_2_all(void)
-{
-	PK_DBG("zhouzhenshu---lijin---flashDisable_SGM3784_2 LED1Closeflag = %d, LED2Closeflag = %d\n", LED1Closeflag, LED2Closeflag);
-	
-	FlashIc_Enable();
-	writeReg(SGM3784_REG_ENABLE, 0x00);	
-	writeReg(SGM3784_REG_MODE, 0x00);
-	writeReg(SGM3784_REG_TIMING, 0x00);
-	
-	// writeReg(SGM3784_REG_FLASH_LED1, 0x00);	//led1 flash=0
-	// writeReg(SGM3784_REG_TORCH_LED1, 0x00);	//led1 torch =0
-	
-	// writeReg(SGM3784_REG_FLASH_LED2, 0x00);	//led2 flash=0
-	// writeReg(SGM3784_REG_TORCH_LED2, 0x00);	//led2 torch =0
-	// LED1Closeflag = 1;
-	// LED2Closeflag = 1;
-	
-	gpio_set_value(GPIO_LED_STROBE,0);
-	gpio_set_value(GPIO_LED_GPIO,0); //不分LED1 LED2  如：LED1Closeflag=1的时候，灭LED1 LED2
-	
 	return 0;
 }
 
@@ -747,10 +743,10 @@ int flashDisable_SGM3784_1(void)
 	{//预闪前，上层g_pStrobe->setOnOff(0);g_pStrobe2->setOnOff(0)
 		writeReg(SGM3784_REG_ENABLE, 0x00);
 		
-		writeReg(SGM3784_REG_FLASH_LED1, 0x00);
-		writeReg(SGM3784_REG_TORCH_LED1, 0x00);
-		writeReg(SGM3784_REG_FLASH_LED2, 0x00);
-		writeReg(SGM3784_REG_TORCH_LED2, 0x00);
+		// writeReg(SGM3784_REG_FLASH_LED1, 0x00);
+		// writeReg(SGM3784_REG_TORCH_LED1, 0x00);
+		// writeReg(SGM3784_REG_FLASH_LED2, 0x00);
+		// writeReg(SGM3784_REG_TORCH_LED2, 0x00);
 		// FlashIc_Disable();rese之后，寄存器会存在默认值，影响后续函数的判断
 		return 0;
 	}
@@ -761,9 +757,12 @@ int flashDisable_SGM3784_1(void)
 		PK_DBG("flashDisable_SGM3784_2 LED1Closeflag = 1 m_duty1=%d m_duty2=%d\n",m_duty1,m_duty2);
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		{
-			#ifdef LED1_WARM
-			writeReg(SGM3784_REG_ENABLE, 0x00);//如果LED1是暖灯，预闪时，这个函数后调用，需要清空才能改变暖灯的工作模式，清空之前先备份
-			#endif
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			g_ModeReg = readReg(SGM3784_REG_MODE);
 			writeReg(SGM3784_REG_MODE, 0xea);	////Assist light mode with continuous LED current //0xea
 
@@ -781,11 +780,7 @@ int flashDisable_SGM3784_1(void)
 				if(g_TimeReg != 0)
 					writeReg(SGM3784_REG_TIMING, g_TimeReg);
 				writeReg(0x03, 0x48);
-				
-				//enabel LED1时会清空LED2的reg。清空前备份了LED2的reg值
-				writeReg(SGM3784_REG_FLASH_LED2, g_FlashReg2);
-				writeReg(SGM3784_REG_TORCH_LED2, g_TorchReg2);
-				
+
 				writeReg(SGM3784_REG_ENABLE,g_EnableReg&(~0x01));	//led2 on
 			}else{
 				writeReg(SGM3784_REG_ENABLE,0x00);
@@ -800,9 +795,12 @@ int flashDisable_SGM3784_1(void)
 		}
 		else
 		{
-			#ifdef LED1_WARM
-			writeReg(SGM3784_REG_ENABLE, 0x00);//如果LED1是暖灯，预闪时，这个函数后调用，需要清空才能改变暖灯的工作模式，清空之前先备份
-			#endif
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			// gpio_set_value(GPIO_LED_GPIO,0);
 			g_ModeReg = readReg(SGM3784_REG_MODE);
 			writeReg(SGM3784_REG_MODE, 0xeb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB
@@ -816,8 +814,6 @@ int flashDisable_SGM3784_1(void)
 			{//led2 on
 				writeReg(SGM3784_REG_TIMING, g_TimeReg);
 				writeReg(0x03, 0x48);
-				writeReg(SGM3784_REG_FLASH_LED2, g_FlashReg2);
-				writeReg(SGM3784_REG_TORCH_LED2, g_TorchReg2);
 				
 				writeReg(SGM3784_REG_ENABLE,g_EnableReg&(~0x01));	//led2 on
 			}else{
@@ -843,7 +839,12 @@ int flashDisable_SGM3784_1(void)
 		//如果LED1是暖灯，那么flash calibration的时候，这个函数后调用
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		{
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
 			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			 // gpio_set_value(GPIO_LED_STROBE,0);
 			writeReg(SGM3784_REG_MODE, 0xea);	//Assist light mode with continuous LED current //0xea
 
@@ -858,10 +859,14 @@ int flashDisable_SGM3784_1(void)
 			// gpio_set_value(GPIO_LED_GPIO,0);
 			PK_DBG("flashDisable_SGM3784_2  ---5--- led1,led2 disable torch mode\n");
 		}
-
 		else
 		{
-			//writeReg(0x0F, 0x00);
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			// gpio_set_value(GPIO_LED_GPIO,0);
 			writeReg(SGM3784_REG_MODE, 0xeb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB
 
@@ -894,10 +899,10 @@ int flashDisable_SGM3784_2(void)
 		writeReg(SGM3784_REG_ENABLE, 0x00);//close
 		g_Reg_First_write = 0;
 		
-		writeReg(SGM3784_REG_FLASH_LED1, 0x00);
-		writeReg(SGM3784_REG_TORCH_LED1, 0x00);
-		writeReg(SGM3784_REG_FLASH_LED2, 0x00);
-		writeReg(SGM3784_REG_TORCH_LED2, 0x00);
+		// writeReg(SGM3784_REG_FLASH_LED1, 0x00);
+		// writeReg(SGM3784_REG_TORCH_LED1, 0x00);
+		// writeReg(SGM3784_REG_FLASH_LED2, 0x00);
+		// writeReg(SGM3784_REG_TORCH_LED2, 0x00);
 		// FlashIc_Disable();rese之后，寄存器会存在默认值，影响后续函数的判断
 		PK_DBG("flashDisable_SGM3784_2 ---0--- LED1Closeflag=1 LED2Closeflag=1");
 		return 0;
@@ -915,7 +920,12 @@ int flashDisable_SGM3784_2(void)
 		//flash calibration时，暖灯灭，冷灯亮完关冷灯
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		{
-			// writeReg(SGM3784_REG_ENABLE, 0x00);
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			g_ModeReg = readReg(SGM3784_REG_MODE);
 			writeReg(SGM3784_REG_MODE, 0xea);
 			g_TimeReg = readReg(SGM3784_REG_TIMING);
@@ -932,10 +942,6 @@ int flashDisable_SGM3784_2(void)
 					writeReg(SGM3784_REG_TIMING, g_TimeReg);
 				writeReg(0x03, 0x48);
 				
-				//enabel LED2时会清空LED1的reg。清空前备份了LED1的reg值
-				writeReg(SGM3784_REG_FLASH_LED1, g_FlashReg1);
-				writeReg(SGM3784_REG_TORCH_LED1, g_TorchReg1);
-				
 				writeReg(SGM3784_REG_ENABLE,g_EnableReg&(~0x02));	//led1 on
 			}else{
 				writeReg(SGM3784_REG_ENABLE,0x00);
@@ -948,7 +954,13 @@ int flashDisable_SGM3784_2(void)
 			PK_DBG("flashDisable_SGM3784_2 ---2--- LED2Closeflag = 1");
 		}
 		else{
-			// writeReg(SGM3784_REG_ENABLE, 0x00);
+			
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			g_ModeReg = readReg(SGM3784_REG_MODE);
 			writeReg(SGM3784_REG_MODE, 0xeb);
 			g_TimeReg = readReg(SGM3784_REG_TIMING);
@@ -964,10 +976,6 @@ int flashDisable_SGM3784_2(void)
 				if(g_TimeReg != 0)
 					writeReg(SGM3784_REG_TIMING, g_TimeReg);
 				writeReg(0x03, 0x48);
-				
-				//enabel LED2时会清空LED1的reg。清空前备份了LED1的reg值
-				writeReg(SGM3784_REG_FLASH_LED1, g_FlashReg1);
-				writeReg(SGM3784_REG_TORCH_LED1, g_TorchReg1);
 				
 				writeReg(SGM3784_REG_ENABLE,g_EnableReg&(~0x02));	//led1 on
 			}else{
@@ -987,7 +995,12 @@ int flashDisable_SGM3784_2(void)
 		//如果LED1是冷灯，那么flash calibration的时候，这个函数后调用
 		if(isMovieMode[m_duty1+1][m_duty2+1] == 1)
 		{
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
 			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			 // gpio_set_value(GPIO_LED_STROBE,0);
 			writeReg(SGM3784_REG_MODE, 0xea);	//Assist light mode with continuous LED current //0xea
 
@@ -1005,7 +1018,12 @@ int flashDisable_SGM3784_2(void)
 
 		else
 		{
-			//writeReg(0x0F, 0x00);
+			/*
+			*预闪流程 LED2 ON-> LED1 ON-> LED 2 OFF-> LED1 OFF 需要清空R<f>寄存器
+			*R<f>软重置之后 LED1/2 flash/torch 电流寄存器不会被清空
+			*/
+			writeReg(SGM3784_REG_ENABLE, 0x00);
+			
 			// gpio_set_value(GPIO_LED_GPIO,0);
 			writeReg(SGM3784_REG_MODE, 0xeb);	//flash mode 电平触发 高触发 硬触发  //0XFB  //0XEB
 
