@@ -464,6 +464,7 @@ unsigned int g_sw_fg_version = 150327;
 static signed int gFG_daemon_log_level = BM_DAEMON_DEFAULT_LOG_LEVEL;
 static unsigned char gDisableFG;
 
+extern int get_bat_charging_current_level(void);
 /* ============================================================ // */
 /* function prototype */
 /* ============================================================ // */
@@ -2116,6 +2117,10 @@ signed int battery_meter_get_charging_current_imm(void)
 
 signed int battery_meter_get_charging_current(void)
 {
+#ifdef CONFIG_MTK_BQ25896_SUPPORT
+	return get_bat_charging_current_level();//[FAQ17629]使用switch charging后ICharging读取不准问题
+#endif
+
 #ifdef DISABLE_CHARGING_CURRENT_MEASURE
 	return 0;
 #elif defined(AUXADC_SUPPORT_IMM_CURRENT_MODE)

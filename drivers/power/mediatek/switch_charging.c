@@ -175,7 +175,11 @@ static unsigned int get_constant_voltage(void)
 	/*unit:mV defined in cust_charging.h */
 	#ifdef CONFIG_BATTERY_HIGH_VOLTAGE
 	if(CONFIG_BATTERY_HIGH_VOLTAGE == 4400)
-		cv = 4350;//当电池电压达到电池满电4400mV之后(但是ZCV值可能还没到达4400)，退出9V充电
+		cv = 4400;//当电池电压达到电池满电4400mV之后(但是ZCV值可能还没到达4400)，退出9V充电
+        else if(CONFIG_BATTERY_HIGH_VOLTAGE == 4350)
+		cv = 4352;
+        else
+		cv = V_CC2TOPOFF_THRES;
 	#else
 	cv = V_CC2TOPOFF_THRES;
 	#endif
@@ -288,7 +292,7 @@ static void mtk_ta_reset_vchr(void)
 {
 	CHR_CURRENT_ENUM chr_current = CHARGE_CURRENT_70_00_MA;
 	printk("%s %d-------------call dump_stack()-------------",__FUNCTION__,__LINE__);
-	dump_stack();
+	//dump_stack();
 
 	battery_charging_control(CHARGING_CMD_SET_INPUT_CURRENT, &chr_current);
 	msleep(250);		/* reset Vchr to 5V */
@@ -785,7 +789,7 @@ void select_charging_current_bcct(void)
 * to be CONFIG_SWITCH_INPUT_OUTPUT_CURRENT_SUPPORT
 */
 	battery_log(BAT_LOG_CRTI,"[select_charging_current_bcct]g_bcct_value = %d\n",g_bcct_value);
-	dump_stack();
+	//dump_stack();
 #ifndef CONFIG_MTK_SWITCH_INPUT_OUTPUT_CURRENT_SUPPORT
 	if ((BMT_status.charger_type == STANDARD_HOST) ||
 	    (BMT_status.charger_type == NONSTANDARD_CHARGER)) {
@@ -1130,7 +1134,7 @@ static void pchr_turn_on_charging(void)
 #if !defined(CONFIG_MTK_JEITA_STANDARD_SUPPORT)
 	BATTERY_VOLTAGE_ENUM cv_voltage;
 #endif
-	BATTERY_VOLTAGE_ENUM cv_vol;
+//	BATTERY_VOLTAGE_ENUM cv_vol;
 	unsigned int charging_enable = KAL_TRUE;
 
 	battery_log(BAT_LOG_FULL,"[pchr_turn_on_charging]\n");
@@ -1212,7 +1216,7 @@ static void pchr_turn_on_charging(void)
 			else
 				cv_voltage = BATTERY_VOLT_04_200000_V;
 
-#ifdef CONFIG_MTK_DYNAMIC_BAT_CV_SUPPORT
+			#ifdef CONFIG_MTK_DYNAMIC_BAT_CV_SUPPORT
 			cv_voltage = get_constant_voltage() * 1000;
 			battery_log(BAT_LOG_FULL, "[BATTERY][BIF] Setting CV to %d\n", cv_voltage / 1000);
 			#endif
@@ -1222,11 +1226,11 @@ static void pchr_turn_on_charging(void)
 			g_cv_voltage = cv_voltage;
 			#endif
 #endif
-			#ifdef CONFIG_BATTERY_HIGH_VOLTAGE
-			if(CONFIG_BATTERY_HIGH_VOLTAGE == 4350)
-				cv_vol = BATTERY_VOLT_04_350000_V;
-				battery_charging_control(CHARGING_CMD_SET_CV_VOLTAGE,&cv_vol);
-			#endif
+//			#ifdef CONFIG_BATTERY_HIGH_VOLTAGE
+//			if(CONFIG_BATTERY_HIGH_VOLTAGE == 4350)
+//				cv_vol = BATTERY_VOLT_04_350000_V;
+//				battery_charging_control(CHARGING_CMD_SET_CV_VOLTAGE,&cv_vol);
+//			#endif
 		}
 	}
 

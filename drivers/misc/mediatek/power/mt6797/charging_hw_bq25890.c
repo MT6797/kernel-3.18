@@ -272,6 +272,8 @@ static unsigned int charging_hw_init(void *data)
 	#ifdef CONFIG_BATTERY_HIGH_VOLTAGE
 	if(CONFIG_BATTERY_HIGH_VOLTAGE == 4350)
 		bq25890_config_interface(bq25890_CON6, 0x20, 0x3F, 2);//offset = 3.84V
+	else if(CONFIG_BATTERY_HIGH_VOLTAGE == 4400)
+		bq25890_config_interface(bq25890_CON6, 0x23, 0x3F, 2);//offset = 3.84V
 	#endif
 
 
@@ -347,6 +349,7 @@ static unsigned int charging_set_cv_voltage(void *data)
 	array_size = GETARRAYNUM(VBAT_CV_VTH);
 	status = STATUS_OK;
 	/*pre_register_value = -1; */
+
 	set_cv_voltage = bmt_find_closest_level(VBAT_CV_VTH, array_size, *(unsigned int *) data);
 	register_value =
 	    charging_parameter_to_value(VBAT_CV_VTH, GETARRAYNUM(VBAT_CV_VTH), set_cv_voltage);
