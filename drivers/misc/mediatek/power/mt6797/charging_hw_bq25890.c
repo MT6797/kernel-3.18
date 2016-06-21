@@ -271,7 +271,7 @@ static unsigned int charging_hw_init(void *data)
 	bq25890_config_interface(bq25890_CON5, 0x2, 0x7, 0);	/* termianation current default 128mA */
 	#ifdef CONFIG_BATTERY_HIGH_VOLTAGE
 	if(CONFIG_BATTERY_HIGH_VOLTAGE == 4350)
-		bq25890_config_interface(bq25890_CON6, 0x20, 0x3F, 2);//offset = 3.84V
+		bq25890_config_interface(bq25890_CON6, 0x23, 0x3F, 2);//offset = 3.84V
 	else if(CONFIG_BATTERY_HIGH_VOLTAGE == 4400)
 		bq25890_config_interface(bq25890_CON6, 0x23, 0x3F, 2);//offset = 3.84V
 	#endif

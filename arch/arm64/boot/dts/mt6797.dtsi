@@ -1044,7 +1044,7 @@
 			sync_to_real_tracking_time = <60 >;	/* Unit: second */
 			v_0percent_tracking = <3450 >;	/* Unit: mV */
 			/* High battery support */
-			high_battery_voltage_support = <0 >;
+			high_battery_voltage_support = <1 >;
 			/* cust_battery_meter.h */
 			/* ADC resistor  */
 			r_bat_sense = <4 >;

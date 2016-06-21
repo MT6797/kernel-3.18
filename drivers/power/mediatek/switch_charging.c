@@ -177,7 +177,7 @@ static unsigned int get_constant_voltage(void)
 	if(CONFIG_BATTERY_HIGH_VOLTAGE == 4400)
 		cv = 4400;//当电池电压达到电池满电4400mV之后(但是ZCV值可能还没到达4400)，退出9V充电
         else if(CONFIG_BATTERY_HIGH_VOLTAGE == 4350)
-		cv = 4352;
+		cv = 4400;  //4352
         else
 		cv = V_CC2TOPOFF_THRES;
 	#else
@@ -1212,7 +1212,18 @@ static void pchr_turn_on_charging(void)
 			/*Set CV Voltage */
 #if !defined(CONFIG_MTK_JEITA_STANDARD_SUPPORT)
 			if (batt_cust_data.high_battery_voltage_support)
+			{
+			#ifdef CONFIG_BATTERY_HIGH_VOLTAGE
+			    if(CONFIG_BATTERY_HIGH_VOLTAGE == 4350)
+				cv_voltage = BATTERY_VOLT_04_400000_V;
+			    else if(CONFIG_BATTERY_HIGH_VOLTAGE == 4400)
+				cv_voltage = BATTERY_VOLT_04_400000_V;
+			    else
+				cv_voltage = BATTERY_VOLT_04_350000_V;
+			#else
 				cv_voltage = BATTERY_VOLT_04_340000_V;
+			#endif
+			}
 			else
 				cv_voltage = BATTERY_VOLT_04_200000_V;
 

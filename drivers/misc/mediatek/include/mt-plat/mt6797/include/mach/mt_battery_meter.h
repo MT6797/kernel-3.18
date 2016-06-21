@@ -70,7 +70,7 @@
 #define OCV_BOARD_COMPESATE	0 /*mV */
 #define R_FG_BOARD_BASE	1000
 #define R_FG_BOARD_SLOPE	1000 /*slope*/
-#define CAR_TUNE_VALUE	122 /*1.00 */
+#define CAR_TUNE_VALUE	110 /*1.00 */   //aka.jiang important
 
 
 /* HW Fuel gague  */
@@ -91,8 +91,8 @@
 #define DIFFERENCE_VOLTAGE_UPDATE	20
 #define AGING1_LOAD_SOC	70
 #define AGING1_UPDATE_SOC	30
-#define BATTERYPSEUDO100	95
-#define BATTERYPSEUDO1	11
+#define BATTERYPSEUDO100	95    //aka.jiang important
+#define BATTERYPSEUDO1		11    //aka.jiang important
 
 /* #define Q_MAX_BY_SYS	*/	/* 8. Qmax variant by system drop voltage. */
 #define Q_MAX_SYS_VOLTAGE		3050
