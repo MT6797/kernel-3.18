@@ -563,9 +563,8 @@ int enter_pasr_dpd_config(unsigned char segment_rank0,
 	unsigned int i, cnt = 1000;
 	unsigned int u4value_1E4 = 0;
 	unsigned int u4value_1E8 = 0;
-	unsigned int u4value_E4 = 0;
-	unsigned int u4value_F4 = 0;
-
+	unsigned int u4value_1DC = 0;
+	
 	/* request SPM HW SEMAPHORE to avoid race condition */
 	cnt = 100;
 	do {
@@ -587,24 +586,25 @@ int enter_pasr_dpd_config(unsigned char segment_rank0,
 	rank_pasr_segment[0], rank_pasr_segment[1]);
 
 	/*Channel-A*/
-	u4value_E4 = readl(PDEF_DRAMC0_CHA_REG_0E4);
-	u4value_F4 = readl(PDEF_DRAMC0_CHA_REG_0F4);
 	u4value_1E8 = readl(PDEF_DRAMC0_CHA_REG_1E8);
 	u4value_1E4 = readl(PDEF_DRAMC0_CHA_REG_1E4);
+	u4value_1DC = readl(PDEF_DRAMC0_CHA_REG_1DC);//Lewis: DCM backup
 
-	writel(readl(PDEF_DRAMC0_CHA_REG_1E8) | 0x04000000,
+	writel(readl(PDEF_DRAMC0_CHA_REG_1E8) | 0x04000000,//Lewis: Disable MR4 
 	PDEF_DRAMC0_CHA_REG_1E8);
-	writel(readl(PDEF_DRAMC0_CHA_REG_1E4) & 0xF7FFFFFF,
+	writel(readl(PDEF_DRAMC0_CHA_REG_1E4) & 0xF7FFFFFF,//Lewis: Disable ZQCS
 	PDEF_DRAMC0_CHA_REG_1E4);
 
 	mb(); /* flush memory */
 	udelay(2);
 
-	writel(readl(PDEF_DRAMC0_CHA_REG_0E4) | 0x00000004,
-	PDEF_DRAMC0_CHA_REG_0E4);
-	writel(readl(PDEF_DRAMC0_CHA_REG_0F4) | 0x00100000,
-	PDEF_DRAMC0_CHA_REG_0F4);
-
+	writel(readl(PDEF_DRAMC0_CHA_REG_1DC) | 0x04000000,//Lewis: DCM off 0x1DC[26] = 1; MIOCKCTRLOFF = 1
+	PDEF_DRAMC0_CHA_REG_1DC);
+	writel(readl(PDEF_DRAMC0_CHA_REG_1DC) & 0xFFFFFFFD,//Lewis: DCM off 0x1DC[1] = 0; DCMEN2 = 0 
+	PDEF_DRAMC0_CHA_REG_1DC);
+	writel(readl(PDEF_DRAMC0_CHA_REG_1DC) & 0xBFFFFFFF,//Lewis: DCM off 0x1DC[30] = 0; R_DMPHYCLKDYNGEN=0
+	PDEF_DRAMC0_CHA_REG_1DC);
+	
 	for (i = 0; i < 2; i++) {
 		if ((i == 1) && (rank_pasr_segment[i] == 0xFF))
 			continue;
@@ -635,17 +635,15 @@ int enter_pasr_dpd_config(unsigned char segment_rank0,
 		PDEF_DRAMC0_CHA_REG_1E4);
 	}
 
-	writel(u4value_E4, PDEF_DRAMC0_CHA_REG_0E4);
-	writel(u4value_F4, PDEF_DRAMC0_CHA_REG_0F4);
 	writel(u4value_1E4, PDEF_DRAMC0_CHA_REG_1E4);
 	writel(u4value_1E8, PDEF_DRAMC0_CHA_REG_1E8);
+	writel(u4value_1DC, PDEF_DRAMC0_CHA_REG_1DC);//Lewis: DCM restore
 	writel(0, PDEF_DRAMC0_CHA_REG_088);
 
 	/*Channel-B*/
-	u4value_E4 = readl(PDEF_DRAMC0_CHB_REG_0E4);
-	u4value_F4 = readl(PDEF_DRAMC0_CHB_REG_0F4);
 	u4value_1E8 = readl(PDEF_DRAMC0_CHB_REG_1E8);
 	u4value_1E4 = readl(PDEF_DRAMC0_CHB_REG_1E4);
+	u4value_1DC = readl(PDEF_DRAMC0_CHB_REG_1DC);//Lewis: DCM backup
 	writel(readl(PDEF_DRAMC0_CHB_REG_1E8) | 0x04000000,
 	PDEF_DRAMC0_CHB_REG_1E8);
 	writel(readl(PDEF_DRAMC0_CHB_REG_1E4) & 0xF7FFFFFF,
@@ -653,12 +651,14 @@ int enter_pasr_dpd_config(unsigned char segment_rank0,
 
 	mb(); /*flush memory */
 	udelay(2);
-
-	writel(readl(PDEF_DRAMC0_CHB_REG_0E4) | 0x00000004,
-	PDEF_DRAMC0_CHB_REG_0E4);
-	writel(readl(PDEF_DRAMC0_CHB_REG_0F4) | 0x00100000,
-	PDEF_DRAMC0_CHB_REG_0F4);
-
+	
+	writel(readl(PDEF_DRAMC0_CHB_REG_1DC) | 0x04000000,//Lewis: DCM off 0x1DC[26] = 1; MIOCKCTRLOFF = 1
+	PDEF_DRAMC0_CHB_REG_1DC);
+	writel(readl(PDEF_DRAMC0_CHB_REG_1DC) & 0xFFFFFFFD,//Lewis: DCM off 0x1DC[1] = 0; DCMEN2 = 0 
+	PDEF_DRAMC0_CHB_REG_1DC);
+	writel(readl(PDEF_DRAMC0_CHB_REG_1DC) & 0xBFFFFFFF,//Lewis: DCM off 0x1DC[30] = 0; R_DMPHYCLKDYNGEN=0
+	PDEF_DRAMC0_CHB_REG_1DC);
+	
 	for (i = 0; i < 2; i++) {
 		if ((i == 1) && (rank_pasr_segment[i] == 0xFF))
 			continue;
@@ -687,10 +687,9 @@ int enter_pasr_dpd_config(unsigned char segment_rank0,
 		PDEF_DRAMC0_CHB_REG_1E4);
 	}
 
-	writel(u4value_E4, PDEF_DRAMC0_CHB_REG_0E4);
-	writel(u4value_F4, PDEF_DRAMC0_CHB_REG_0F4);
 	writel(u4value_1E4, PDEF_DRAMC0_CHB_REG_1E4);
 	writel(u4value_1E8, PDEF_DRAMC0_CHB_REG_1E8);
+	writel(u4value_1DC, PDEF_DRAMC0_CHB_REG_1DC);//Lewis: DCM restore
 	writel(0, PDEF_DRAMC0_CHB_REG_088);
 
 	if (segment_rank1 == 0xFF) {
