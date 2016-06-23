@@ -615,6 +615,9 @@ static void lcm_suspend(void)
 	mt_set_gpio_out(GPIO_65132_EN, GPIO_OUT_ZERO);
 #else
 	set_gpio_lcd_enp(0);
+        MDELAY(10);
+        SET_RESET_PIN(1);
+	MDELAY(10);
 #endif
 	push_table(lcm_suspend_setting, sizeof(lcm_suspend_setting) / sizeof(struct LCM_setting_table), 1);
 }
