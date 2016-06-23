@@ -90,6 +90,7 @@ struct LCM_setting_table {
 
 static struct LCM_setting_table lcm_suspend_setting[] = {
 	{0x28, 0, {} },
+	{REGFLAG_DELAY, 20, {}},
 	{0x10, 0, {} },
 	{REGFLAG_DELAY, 120, {} }
 };
@@ -335,12 +336,13 @@ static void lcm_suspend(void)
 
 #else
 	gpio_set_value(LCM_RESET_PIN, 1);
-	MDELAY(10);
+	MDELAY(20);
 
-	gpio_set_value(LCM_RESET_PIN, 0);
-	MDELAY(10);
+	//gpio_set_value(LCM_RESET_PIN, 0);
+	//MDELAY(10);
 	
 	gpio_set_value(LCD_BIAS_EN_PIN, 0);
+	MDELAY(10);
 #endif
 }
 
