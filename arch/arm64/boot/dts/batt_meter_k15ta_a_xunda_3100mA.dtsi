@@ -59,7 +59,7 @@
 			max_swocv = <3 >;
 
 			batterypseudo100 = <95 >;   /* aka.jiang add important */
-			batterypseudo1 = <11 >;     /* aka.jiang add important */
+			batterypseudo1 = <7 >;     /* aka.jiang add important */
 
 			q_max_sys_voltage = <3050 >;
 			shutdown_gauge0 = <1 >;
