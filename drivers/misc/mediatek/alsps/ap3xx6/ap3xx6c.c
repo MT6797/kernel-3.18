@@ -1175,7 +1175,8 @@ static void ap3xx6_eint_work(struct work_struct *work)
 	}
 
 	err = ap3xx6_check_and_clear_intr(obj->client);
-	if ((err < 0) || err & 0x20) {
+	//if ((err < 0) || err & 0x20) {
+	if (err < 0) {
 		APS_ERR("ap3xx6_eint_work check intrs: %d\n", err);
 	} else if (err & 0x01) {
 		/* ALS interrupt. User should add their code here if they want to handle ALS Int. */
