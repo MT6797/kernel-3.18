@@ -185,11 +185,11 @@ static struct mt_chip_conf spi_conf_dma =
 #define USE_SPI1_4GB_TEST (1)
 
 #if USE_SPI1_4GB_TEST
-static dma_addr_t SpiDmaBufTx_pa;
-static dma_addr_t SpiDmaBufRx_pa;
+//static dma_addr_t SpiDmaBufTx_pa;
+//static dma_addr_t SpiDmaBufRx_pa;
 static char *spi_tx_local_buf;
 static char *spi_rx_local_buf;
-
+/*
 static int reserve_memory_spi_fn(struct reserved_mem *rmem)
 {
 	printk(" 11111name: %s, base: 0x%llx, size: 0x%llx\n", rmem->name,
@@ -200,7 +200,7 @@ static int reserve_memory_spi_fn(struct reserved_mem *rmem)
 	return 0;
 }
 RESERVEDMEM_OF_DECLARE(reserve_memory_test, "mediatek,spi-reserve-memory", reserve_memory_spi_fn);
-
+*/
 #endif
 
 static int spi_setup_xfer(struct spi_transfer *xfer)
@@ -1116,8 +1116,8 @@ static const struct file_operations fp_fops = {
 /*-------------------------------------------------------------------------*/
 
 static struct class *fp_class;
-u8 result[] = {0xFF, 0xFF};
-u8 result1[] = {0xFF, 0xFF};
+static u8 result[] = {0xFF, 0xFF};
+static u8 result1[] = {0xFF, 0xFF};
 static struct kobject *et320_kobj=NULL;
 static ssize_t fp_show_readimage(struct device *ddri,struct device_attribute *attr,char *buf)
 {	
@@ -1145,7 +1145,7 @@ static int fp_is_connected(struct fp_data *fp)
 static int __init fp_probe(struct spi_device *spi)
 {
 	struct fp_data *fp;
-	int status;
+	int status = 0;
 	unsigned long minor;
 	//int i;
 	int ret;
@@ -1170,8 +1170,7 @@ static int __init fp_probe(struct spi_device *spi)
 	mutex_init(&fp->buf_lock);
 
 	INIT_LIST_HEAD(&fp->device_entry);
-	et320_kobj = kobject_create_and_add("et320_sysfs",NULL);	
-	status = sysfs_create_file(et320_kobj,&dev_attr_readimage.attr);
+
 
 	/*
 	 * If we can allocate a minor number, hook up this device.
@@ -1214,6 +1213,10 @@ static int __init fp_probe(struct spi_device *spi)
 		DEBUG_PRINT("%s : initialize error %d\n", __func__, status);
 		goto exit_fp_probe;
 	}
+	
+	et320_kobj = kobject_create_and_add("fp_sysfs",NULL);	
+	status = sysfs_create_file(et320_kobj,&dev_attr_readimage.attr);
+	
 	mutex_lock(&device_list_lock);
 	minor = find_first_zero_bit(minors, N_SPI_MINORS);
 	if (minor < N_SPI_MINORS) {

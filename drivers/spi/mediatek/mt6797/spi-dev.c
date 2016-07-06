@@ -1125,12 +1125,12 @@ static struct spi_board_info spi_board_devs[] __initdata = {
 	.chip_select = 1,
 	.mode = SPI_MODE_3,
 	},
-	[1] = {
+	/*[1] = {
 	.modalias = "spi-ut1",
 	.bus_num = 1,
 	.chip_select = 1,
 	.mode = SPI_MODE_3,
-	},
+	},*/
 	[2] = {
 	.modalias = "spi-ut2",
 	.bus_num = 2,

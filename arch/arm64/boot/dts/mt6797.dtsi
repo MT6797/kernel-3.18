@@ -4079,6 +4079,12 @@
 		goodix_fp: fingerprint@ {
 			compatible = "mediatek,goodix-fp";
 		};
+		ma:ma@0{
+			compatible = "mediatek,ma-eint";
+		};
+		ma_finger: ma_finger@0{
+			compatible = "mediatek,ma_finger";
+		};
 
 		ccci_util_cfg {
 			compatible = "mediatek,ccci_util_cfg";

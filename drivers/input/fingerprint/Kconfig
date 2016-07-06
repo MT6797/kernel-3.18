@@ -24,7 +24,11 @@ config MTK_ET310
         bool "ET310 for MediaTek package"
         default n
 endif
-	
+
+config MTK_AFS12X
+        bool "AFS12X for MediaTek package"
+        default n
+        
 if MTK_FINGERPRINT_SELECT = "FPC1145"
 config FPC_FINGERPRINT
 	bool "FPC Fingerprint"

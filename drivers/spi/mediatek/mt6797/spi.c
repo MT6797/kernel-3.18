@@ -32,6 +32,14 @@
 /*#include <mach/mt_gpio.h>*/
 #include <mt-plat/mt_lpae.h>/* DMA */
 
+#include <linux/of_reserved_mem.h>
+#include <linux/memblock.h>
+#include <asm/page.h>
+#include <asm-generic/memory_model.h>
+#include <mt-plat/mt_lpae.h> /* DMA */
+#include <mt-plat/aee.h>
+#include <linux/dma-mapping.h>
+
 
 #if defined(CONFIG_MTK_CLKMGR)
  /* mt_clkmgr.h will be removed after CCF porting is finished. */
@@ -86,6 +94,21 @@ struct mt_spi_t {
 #endif
 /*open time record debug, log can't affect transfer*/
 /*	#define SPI_REC_DEBUG */
+ dma_addr_t SpiDmaBufTx_pa;
+ dma_addr_t SpiDmaBufRx_pa;
+// char *spi_tx_local_buf;
+// char *spi_rx_local_buf;
+
+static int reserve_memory_spi_fn(struct reserved_mem *rmem)
+{
+	printk(" 2222name: %s, base: 0x%llx, size: 0x%llx\n", rmem->name,
+			(unsigned long long)rmem->base, (unsigned long long)rmem->size);
+	BUG_ON(rmem->size < 0x8000);
+	SpiDmaBufTx_pa = rmem->base;
+	SpiDmaBufRx_pa = rmem->base+0x4000;
+	return 0;
+}
+RESERVEDMEM_OF_DECLARE(reserve_memory_test, "mediatek,spi-reserve-memory", reserve_memory_spi_fn);
 
 struct platform_device *spi_pdev[6];
 static void enable_clk(struct mt_spi_t *ms)
