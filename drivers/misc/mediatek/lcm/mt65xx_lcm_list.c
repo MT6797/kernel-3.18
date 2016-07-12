@@ -48,6 +48,9 @@ LCM_DRIVER *lcm_driver_list[] = {
 #if defined(BOYI_R63350_FHD_DSI_VDO)
 	&boyi_r63350_fhd_dsi_vdo_lcm_drv,
 #endif
+#if defined(BOYI_HX8398_FHD_DSI_VDO)
+	&boyi_hx8398_fhd_dsi_vdo_lcm_drv,
+#endif
 };
 
 unsigned char lcm_name_list[][128] = {

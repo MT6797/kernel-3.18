@@ -19,6 +19,7 @@ extern LCM_DRIVER r63419_wqhd_boyi_vdo_lcm_drv;
 extern LCM_DRIVER nt35523_fhd_dsi_vdo_lcm_drv;
 extern LCM_DRIVER lide_ili9885_fhd_dsi_vdo_lcm_drv;
 extern LCM_DRIVER boyi_r63350_fhd_dsi_vdo_lcm_drv;
+extern LCM_DRIVER boyi_hx8398_fhd_dsi_vdo_lcm_drv;
 
 #ifdef BUILD_LK
 extern void mdelay(unsigned long msec);
