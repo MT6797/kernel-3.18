@@ -2828,7 +2828,7 @@ CHARGER_TYPE mt_get_charger_type(void)
 #endif
 }
 
-#define MAX_RETRY_TIME 5
+#define MAX_RETRY_TIME 50
 
 static void mt_battery_charger_detect_check(void)
 {
