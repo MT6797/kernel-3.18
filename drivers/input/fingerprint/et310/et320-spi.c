@@ -1151,6 +1151,10 @@ static int __init fp_probe(struct spi_device *spi)
 	int ret;
 	
 	struct spi_device *spi_initialize;
+	if(finger_is_connect == 1){
+		printk("%s: another fingerprint is connect\n", __func__);
+		return -1;
+ 	}
 
 	DEBUG_PRINT("%s initial\n", __func__);
 
@@ -1244,10 +1248,13 @@ static int __init fp_probe(struct spi_device *spi)
 	setup_timer(&fps_ints.timer, interrupt_timer_routine, (unsigned long)&fps_ints);
 	add_timer(&fps_ints.timer);
 
+	finger_is_connect = 1;
 	DEBUG_PRINT("%s : initialize success %d\n", __func__, status);
 	Interrupt_Init(0,20,10);
 	return status;
 exit_fp_probe:
+		gpio_free(GPIO_FPS_RESET_PIN);
+		gpio_free(P_GPIO_FPS_PWR_PIN);
 		kfree(fp);
 		return -1;
 

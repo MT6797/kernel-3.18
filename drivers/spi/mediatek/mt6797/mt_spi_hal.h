@@ -122,5 +122,6 @@ extern void spi_set_pinctrl(int spi_id);
 extern void spi_clr_pinctrl(int spi_id);
 extern dma_addr_t SpiDmaBufTx_pa;
 extern dma_addr_t SpiDmaBufRx_pa;
+extern int finger_is_connect;
 
 #endif

@@ -96,6 +96,8 @@ struct mt_spi_t {
 /*	#define SPI_REC_DEBUG */
  dma_addr_t SpiDmaBufTx_pa;
  dma_addr_t SpiDmaBufRx_pa;
+ 
+int finger_is_connect = 0;
 // char *spi_tx_local_buf;
 // char *spi_rx_local_buf;
 

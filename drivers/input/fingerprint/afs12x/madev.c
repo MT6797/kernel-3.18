@@ -505,7 +505,11 @@ static void mas_set_input(void) {
 int mas_probe(struct spi_device *spi) {
 	int ret = 0;
 	struct device_node *node = NULL;
- 
+
+ 	if(finger_is_connect == 1){
+		printd("%s: another fingerprint is connect\n", __func__);
+		return -1;
+ 	}
 	printd("%s: start\n", __func__);
 		
 	plat_set_gpio(splat);
@@ -558,12 +562,16 @@ int mas_probe(struct spi_device *spi) {
 	plat_enable_irq(spi, 1);	
 	mutex_unlock(&dev_lock);
 
+	finger_is_connect = 1;
 	printw("%s: insmod successfully. version:2.0 time:0919_am11\n", __func__);
 	return ret;
 
 fail:
 	printw("%s: insmod failed.\n", __func__);
 	mutex_unlock(&dev_lock);
+	
+	gpio_free(GPIO_FPS_RESET_PIN);
+	gpio_free(P_GPIO_FPS_PWR_PIN);
 
 	return ret;
 }
