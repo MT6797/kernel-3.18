@@ -3181,6 +3181,7 @@ VOID nicRxProcessEventPacket(IN P_ADAPTER_T prAdapter, IN OUT P_SW_RFB_T prSwRfb
 					break;
 				}
 
+				prAdapter->prAisBssInfo->u2DeauthReason = prEventBssBeaconTimeout->ucReasonCode;
 				aisBssBeaconTimeout(prAdapter);
 			}
 #if CFG_ENABLE_WIFI_DIRECT

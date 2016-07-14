@@ -2257,6 +2257,13 @@ static struct wireless_dev *wlanNetCreate(PVOID pvData)
 	prGlueInfo->prSchedScanRequest = NULL;
 	prGlueInfo->puScanChannel = NULL;
 
+	/*Full2Partial*/
+	/*init update full scan to partial scan varable*/
+	prGlueInfo->u4LastFullScanTime = 0;
+	prGlueInfo->ucTrScanType = 0;
+	kalMemSet(prGlueInfo->ucChannelNum, 0, FULL_SCAN_MAX_CHANNEL_NUM);
+	prGlueInfo->puFullScan2PartialChannel = NULL;
+
 #if CFG_SUPPORT_PASSPOINT
 	/* Init DAD */
 	prGlueInfo->fgIsDad = FALSE;
@@ -2949,7 +2956,10 @@ static VOID wlanRemove(VOID)
 
 	flush_delayed_work(&sched_workq);
 
-	kalHaltLock(KAL_WLAN_REMOVE_TIMEOUT_MSEC);
+	if (-ETIME == kalHaltLock(KAL_WLAN_REMOVE_TIMEOUT_MSEC)) {
+		DBGLOG(INIT, ERROR, "Halt Lock, need OidComplete.\n");
+		kalOidComplete(prGlueInfo, FALSE, 0, WLAN_STATUS_NOT_ACCEPTED);
+	}
 	kalSetHalted(TRUE);
 
 	/* 4 <2> Mark HALT, notify main thread to stop, and clean up queued requests */

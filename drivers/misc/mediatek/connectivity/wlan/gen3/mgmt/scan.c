@@ -847,7 +847,7 @@ VOID scnInit(IN P_ADAPTER_T prAdapter)
 
 		pucRoamBSSBuff += ALIGN_4(sizeof(ROAM_BSS_DESC_T));
 	}
-	ASSERT(((ULONG) pucRoamBSSBuff - (ULONG) &prScanInfo->aucScanRoamBuffer[0]) ==
+	ASSERT(((ULONG) pucRoamBSSBuff - (ULONG) & prScanInfo->aucScanRoamBuffer[0]) ==
 	       SCN_ROAM_MAX_BUFFER_SIZE);
 	/* reset freest channel information */
 	prScanInfo->fgIsSparseChannelValid = FALSE;
@@ -1123,7 +1123,6 @@ VOID scanRemoveRoamBssDescsByTime(IN P_ADAPTER_T prAdapter, IN UINT_32 u4RemoveT
 		}
 	}
 
-	return;
 }
 
 P_ROAM_BSS_DESC_T
@@ -1445,6 +1444,9 @@ VOID scanRemoveBssDescsByPolicy(IN P_ADAPTER_T prAdapter, IN UINT_32 u4RemovePol
 					prBssDescWeakestSameSSID = prBssDesc;
 				else if (prBssDesc->ucRCPI < prBssDescWeakestSameSSID->ucRCPI)
 					prBssDescWeakestSameSSID = prBssDesc;
+
+				if (u4SameSSIDCount < SCN_BSS_DESC_SAME_SSID_THRESHOLD)
+					continue;
 			}
 
 			if (!prBssDescWeakest) {	/* 1st element */
@@ -2449,6 +2451,39 @@ BOOLEAN scanCheckBssIsLegal(IN P_ADAPTER_T prAdapter, P_BSS_DESC_T prBssDesc)
 
 /*----------------------------------------------------------------------------*/
 /*!
+* @brief Parse channel number to array index.
+*
+* @param[in] u4ChannelNum            channel number.
+*
+* @retval index           array index
+*/
+/*----------------------------------------------------------------------------*/
+UINT_8 nicChannelNum2Index(IN UINT_8 ucChannelNum)
+{
+	UINT_8 ucindex;
+
+	/*Full2Partial*/
+	if (ucChannelNum >= 1 && ucChannelNum <= 14)
+		/*1---14*/
+		ucindex = ucChannelNum;
+	else if (ucChannelNum >= 36 && ucChannelNum <= 64)
+		/*15---22*/
+		ucindex = 6 + (ucChannelNum >> 2);
+	else if (ucChannelNum >= 100 && ucChannelNum <= 144)
+		/*23---34*/
+		ucindex = (ucChannelNum >> 2) - 2;
+	else if (ucChannelNum >= 149 && ucChannelNum <= 165) {
+		/*35---39*/
+		ucChannelNum = ucChannelNum - 1;
+		ucindex = (ucChannelNum >> 2) - 2;
+	} else
+		ucindex = 0;
+
+		return ucindex;
+}
+
+/*----------------------------------------------------------------------------*/
+/*!
 * @brief Parse the content of given Beacon or ProbeResp Frame.
 *
 * @param[in] prSwRfb            Pointer to the receiving SW_RFB_T structure.
@@ -2502,6 +2537,17 @@ WLAN_STATUS scanProcessBeaconAndProbeResp(IN P_ADAPTER_T prAdapter, IN P_SW_RFB_
 	prBssDesc = scanAddToBssDesc(prAdapter, prSwRfb);
 
 	if (prBssDesc) {
+		/*Full2Partial at here, we should save channel info*/
+		if (prAdapter->prGlueInfo->ucTrScanType == 1) {
+			UINT_8	ucindex;
+
+			ucindex = nicChannelNum2Index(prBssDesc->ucChannelNum);
+			DBGLOG(SCN, TRACE, "Full2Partial ucChannelNum=%d, ucindex=%d\n",
+				prBssDesc->ucChannelNum, ucindex);
+
+			/*prAdapter->prGlueInfo->ucChannelListNum++;*/
+			prAdapter->prGlueInfo->ucChannelNum[ucindex] = 1;
+		}
 
 		/* 4 <1.1> Beacon Change Detection for Connected BSS */
 		if (prAisBssInfo->eConnectionState == PARAM_MEDIA_STATE_CONNECTED &&

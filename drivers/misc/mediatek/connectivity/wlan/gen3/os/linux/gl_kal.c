@@ -1626,6 +1626,7 @@ WLAN_STATUS kalRxIndicateOnePkt(IN P_GLUE_INFO_T prGlueInfo, IN PVOID pvPkt)
 {
 	struct net_device *prNetDev = prGlueInfo->prDevHandler;
 	struct sk_buff *prSkb = NULL;
+	UINT_8 bssIdx = 0;
 
 	ASSERT(prGlueInfo);
 	ASSERT(pvPkt);
@@ -1642,9 +1643,19 @@ WLAN_STATUS kalRxIndicateOnePkt(IN P_GLUE_INFO_T prGlueInfo, IN PVOID pvPkt)
 #endif
 
 #if 1
-	prNetDev = (struct net_device *)wlanGetNetInterfaceByBssIdx(prGlueInfo, GLUE_GET_PKT_BSS_IDX(prSkb));
-	if (!prNetDev)
+	bssIdx = GLUE_GET_PKT_BSS_IDX(prSkb);
+	prNetDev = (struct net_device *)wlanGetNetInterfaceByBssIdx(prGlueInfo, bssIdx);
+	if (!prNetDev) {
 		prNetDev = prGlueInfo->prDevHandler;
+	} else {
+		if (bssIdx == NET_DEV_P2P_IDX) {
+			if (prGlueInfo->prAdapter->rP2PNetRegState == ENUM_NET_REG_STATE_UNREGISTERED) {
+				DBGLOG(RX, INFO, "bssIdx = %d P2PNetRegState=%d\n",
+					bssIdx, prGlueInfo->prAdapter->rP2PNetRegState);
+				prNetDev = prGlueInfo->prDevHandler;
+			}
+		}
+	}
 #if CFG_SUPPORT_SNIFFER
 	if (prGlueInfo->fgIsEnableMon)
 		prNetDev = prGlueInfo->prMonDevHandler;
@@ -1864,6 +1875,18 @@ kalIndicateStatusAndComplete(IN P_GLUE_INFO_T prGlueInfo, IN WLAN_STATUS eStatus
 
 		netif_carrier_off(prGlueInfo->prDevHandler);
 
+		/*Full2Partial*/
+		/*at here, should init u4LastFullScanTime, ucTrScanType, ucChannelListNum, ucChannelNum*/
+		DBGLOG(INIT, TRACE, "Full2Partial disconenct reset value\n");
+		prGlueInfo->u4LastFullScanTime = 0;
+		prGlueInfo->ucTrScanType = 0;
+		kalMemSet(prGlueInfo->ucChannelNum, 0, FULL_SCAN_MAX_CHANNEL_NUM);
+		if (prGlueInfo->puFullScan2PartialChannel != NULL) {
+			kalMemFree(prGlueInfo->puFullScan2PartialChannel,
+			VIR_MEM_TYPE, sizeof(PARTIAL_SCAN_INFO));
+			prGlueInfo->puFullScan2PartialChannel = NULL;
+		}
+
 		if (prGlueInfo->fgIsRegistered == TRUE) {
 			P_BSS_INFO_T prBssInfo = prGlueInfo->prAdapter->prAisBssInfo;
 			UINT_16 u2DeauthReason = 0;
@@ -1871,7 +1894,8 @@ kalIndicateStatusAndComplete(IN P_GLUE_INFO_T prGlueInfo, IN WLAN_STATUS eStatus
 			if (prBssInfo)
 				u2DeauthReason = prBssInfo->u2DeauthReason;
 			/* CFG80211 Indication */
-			cfg80211_disconnected(prGlueInfo->prDevHandler, u2DeauthReason, NULL, 0, GFP_KERNEL);
+			cfg80211_disconnected(prGlueInfo->prDevHandler, u2DeauthReason, NULL, 0,
+			eStatus == WLAN_STATUS_MEDIA_DISCONNECT_LOCALLY, GFP_KERNEL);
 		}
 
 		prGlueInfo->eParamMediaStateIndicated = PARAM_MEDIA_STATE_DISCONNECTED;

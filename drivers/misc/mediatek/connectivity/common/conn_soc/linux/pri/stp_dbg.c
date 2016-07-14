@@ -36,6 +36,7 @@
 /* #include "stp_btm.h" */
 #include "btm_core.h"
 #include "wmt_plat.h"
+#include "mtk_wcn_consys_hw.h"
 
 #define PFX_STP_DBG                      "[STPDbg]"
 #define STP_DBG_LOG_LOUD                 4
@@ -928,6 +929,66 @@ INT32 wcn_compressor_reset(P_WCN_COMPRESSOR_T cprs, UINT8 enable, WCN_COMPRESS_A
 	return 0;
 }
 
+INT32 wcn_core_dump_nl(P_WCN_CORE_DUMP_T dmp, PUINT8 buf, INT32 len)
+{
+	INT32 ret = 0;
+
+	if ((!dmp) || (!buf)) {
+		STP_DBG_ERR_FUNC("invalid pointer!\n");
+		return -1;
+	}
+
+	ret = osal_lock_sleepable_lock(&dmp->dmp_lock);
+	if (ret) {
+		STP_DBG_ERR_FUNC("--->lock dmp->dmp_lock failed, ret=%d\n", ret);
+		return ret;
+	}
+
+	switch (dmp->sm) {
+	case CORE_DUMP_INIT:
+		osal_timer_start(&dmp->dmp_timer, STP_CORE_DUMP_TIMEOUT);
+		STP_DBG_WARN_FUNC("COMBO_CONSYS coredump start, please wait up to %d minutes.\n",
+				STP_CORE_DUMP_TIMEOUT/60000);
+		/* check end srting */
+		ret = wcn_core_dump_check_end(buf, len);
+		if (ret == 1) {
+			STP_DBG_INFO_FUNC("core dump end!\n");
+			osal_timer_stop(&dmp->dmp_timer);
+			dmp->sm = CORE_DUMP_INIT;
+		} else {
+			dmp->sm = CORE_DUMP_DOING;
+		}
+		break;
+
+	case CORE_DUMP_DOING:
+		/* check end srting */
+		ret = wcn_core_dump_check_end(buf, len);
+		if (ret == 1) {
+			STP_DBG_INFO_FUNC("core dump end!\n");
+			osal_timer_stop(&dmp->dmp_timer);
+			dmp->sm = CORE_DUMP_INIT;
+		} else {
+			dmp->sm = CORE_DUMP_DOING;
+		}
+		break;
+
+	case CORE_DUMP_DONE:
+		osal_timer_stop(&dmp->dmp_timer);
+		dmp->sm = CORE_DUMP_INIT;
+		break;
+
+	case CORE_DUMP_TIMEOUT:
+		ret = 32;
+		break;
+	default:
+		break;
+	}
+
+	osal_unlock_sleepable_lock(&dmp->dmp_lock);
+
+	return ret;
+}
+
 static void stp_dbg_dump_data(unsigned char *pBuf, char *title, int len)
 {
 	int k = 0;
@@ -1278,11 +1339,19 @@ INT8 stp_dbg_nl_send(PINT8 aucMsg, UINT8 cmd, INT32 len)
 	void *msg_head = NULL;
 	int rc = -1;
 	int i;
+	INT32 ret = 0;
 
 	if (num_bind_process == 0) {
 		/* no listening process */
 		STP_DBG_ERR_FUNC("%s(): the process is not invoked\n", __func__);
 		return 0;
+	}
+
+	ret = wcn_core_dump_nl(g_core_dump, aucMsg, len);
+	if (ret < 0)
+		return ret;
+	if (ret == 32) {
+		return ret;
 	}
 
 	for (i = 0; i < num_bind_process; i++) {
@@ -1299,8 +1368,8 @@ INT8 stp_dbg_nl_send(PINT8 aucMsg, UINT8 cmd, INT32 len)
 			rc = nla_put(skb, STP_DBG_ATTR_MSG, len, aucMsg);
 			if (rc != 0) {
 				nlmsg_free(skb);
-				STP_DBG_ERR_FUNC("%s(): nla_put_string fail...%d\n", __func__, rc);
-				return -1;
+				STP_DBG_ERR_FUNC("%s(): nla_put_string fail...: %d\n", __func__, rc);
+				return rc;
 			}
 
 			/* finalize the message */
@@ -1309,8 +1378,8 @@ INT8 stp_dbg_nl_send(PINT8 aucMsg, UINT8 cmd, INT32 len)
 			/* sending message */
 			rc = genlmsg_unicast(&init_net, skb, bind_pid[i]);
 			if (rc != 0) {
-				STP_DBG_ERR_FUNC("%s(): genlmsg_unicast fail...\n", __func__);
-				return -1;
+				STP_DBG_ERR_FUNC("%s(): genlmsg_unicast fail...: %d\n", __func__, rc);
+				return rc;
 			}
 		} else {
 			STP_DBG_ERR_FUNC("%s(): genlmsg_new fail...\n", __func__);
@@ -1569,6 +1638,47 @@ VOID stp_dbg_dmaregs_deinit(P_STP_DBG_DMAREGS_T pDmaRegs)
 	}
 }
 
+UINT32 stp_dbg_read_debug_crs(ENUM_CONNSYS_DEBUG_CR cr)
+{
+	UINT8 *consys_dbg_cr_base = NULL;
+	UINT32 value;
+
+	switch (cr) {
+	case CONNSYS_CPU_CLK:
+		consys_dbg_cr_base = ioremap_nocache(CONSYS_DBG_CR_BASE, 0x500);
+		return CONSYS_REG_READ(consys_dbg_cr_base + CONSYS_CPU_CLK_STATUS_OFFSET);
+	case CONNSYS_BUS_CLK:
+		consys_dbg_cr_base = ioremap_nocache(CONSYS_DBG_CR_BASE, 0x500);
+		return CONSYS_REG_READ(consys_dbg_cr_base + CONSYS_BUS_CLK_STATUS_OFFSET);
+	case CONNSYS_DEBUG_CR1:
+		consys_dbg_cr_base = ioremap_nocache(CONSYS_DBG_CR_BASE, 0x500);
+		return CONSYS_REG_READ(consys_dbg_cr_base + CONSYS_DBG_CR1_OFFSET);
+	case CONNSYS_DEBUG_CR2:
+		consys_dbg_cr_base = ioremap_nocache(CONSYS_DBG_CR_BASE, 0x500);
+		return CONSYS_REG_READ(consys_dbg_cr_base + CONSYS_DBG_CR2_OFFSET);
+	case CONNSYS_TOP_CKGEN0:
+		consys_dbg_cr_base = ioremap_nocache(CONSYS_TOP_CFG_AON_BASE, 0x500);
+		return CONSYS_REG_READ(consys_dbg_cr_base + CONSYS_TOP_CKGEN0_OFFSET);
+	case CONNSYS_PWRCTLCR:
+		consys_dbg_cr_base = ioremap_nocache(CONSYS_TOP_CFG_AON_BASE, 0x500);
+		return CONSYS_REG_READ(consys_dbg_cr_base + CONSYS_PWRCTLCR_OFFSET);
+	case CONNSYS_TOP_CKMON:
+		consys_dbg_cr_base = ioremap_nocache(CONSYS_TOP_CFG_BASE, 0x500);
+		return CONSYS_REG_READ(consys_dbg_cr_base + CONSYS_TOP_CKMON_OFFSET);
+	case CONNSYS_TOP_CKGEN3:
+		consys_dbg_cr_base = ioremap_nocache(CONSYS_TOP_CFG_BASE, 0x500);
+		return CONSYS_REG_READ(consys_dbg_cr_base + CONSYS_TOP_CKGEN3_OFFSET);
+	case CONNSYS_CIRQ_STA:
+		value = CONSYS_REG_READ(conn_reg.topckgen_base + CONSYS_EMI_MAPPING_OFFSET);
+		value |= 0x8104 << 16;
+		CONSYS_REG_WRITE(conn_reg.topckgen_base + CONSYS_EMI_MAPPING_OFFSET, value);
+		consys_dbg_cr_base = ioremap_nocache(CONSYS_MAPPING_CR_BASE, 0x500);
+		return CONSYS_REG_READ(consys_dbg_cr_base + CONSYS_CIRQ_STA_OFFSET);
+	default:
+		return 0;
+	}
+}
+
 INT32 stp_dbg_poll_cpupcr(UINT32 times, UINT32 sleep, UINT32 cmd)
 {
 	INT32 i = 0;
@@ -1577,6 +1687,17 @@ INT32 stp_dbg_poll_cpupcr(UINT32 times, UINT32 sleep, UINT32 cmd)
 		STP_DBG_ERR_FUNC("NULL reference pointer\n");
 		return -1;
 	}
+
+	STP_DBG_INFO_FUNC("CONNSYS cpu clk status:0x%08x\n", stp_dbg_read_debug_crs(CONNSYS_CPU_CLK));
+	STP_DBG_INFO_FUNC("CONNSYS bus clk status:0x%08x\n", stp_dbg_read_debug_crs(CONNSYS_BUS_CLK));
+	STP_DBG_INFO_FUNC("CONNSYS debug cr1 0x18070408:0x%08x\n",
+			stp_dbg_read_debug_crs(CONNSYS_DEBUG_CR1));
+	STP_DBG_INFO_FUNC("CONNSYS debug cr2 0x1807040c:0x%08x\n",
+			stp_dbg_read_debug_crs(CONNSYS_DEBUG_CR2));
+	STP_DBG_INFO_FUNC("CONNSYS TOP CKGEN0:0x%08x\n", stp_dbg_read_debug_crs(CONNSYS_TOP_CKGEN0));
+	STP_DBG_INFO_FUNC("CONNSYS TOP PWRCTLCR:0x%08x\n", stp_dbg_read_debug_crs(CONNSYS_PWRCTLCR));
+	STP_DBG_INFO_FUNC("CONNSYS TOP CKGEN3:0x%08x\n", stp_dbg_read_debug_crs(CONNSYS_TOP_CKGEN3));
+	STP_DBG_INFO_FUNC("CONNSYS CIRQ STA:0x%08x\n", stp_dbg_read_debug_crs(CONNSYS_CIRQ_STA));
 
 	if (!cmd) {
 		if (g_stp_dbg_cpupcr->count + times > STP_DBG_CPUPCR_NUM)
@@ -1619,6 +1740,7 @@ INT32 stp_dbg_poll_cpupcr(UINT32 times, UINT32 sleep, UINT32 cmd)
 		osal_unlock_sleepable_lock(&g_stp_dbg_cpupcr->lock);
 
 	}
+
 	return 0;
 }
 

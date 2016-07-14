@@ -899,7 +899,8 @@ p2pFuncDissolve(IN P_ADAPTER_T prAdapter,
 			/* Reset station record status. */
 			if (prP2pBssInfo->prStaRecOfAP) {
 				kalP2PGCIndicateConnectionStatus(prAdapter->prGlueInfo,
-								 NULL, NULL, 0, REASON_CODE_DEAUTH_LEAVING_BSS);
+								 NULL, NULL, 0, REASON_CODE_DEAUTH_LEAVING_BSS,
+								 WLAN_STATUS_MEDIA_DISCONNECT_LOCALLY);
 
 				/* 2012/02/14 frog: After formation before join group, prStaRecOfAP is NULL. */
 				p2pFuncDisconnect(prAdapter, prP2pBssInfo->prStaRecOfAP, fgSendDeauth, u2ReasonCode);

@@ -1871,6 +1871,115 @@ VOID aisFsmStateAbort_IBSS(IN P_ADAPTER_T prAdapter)
 
 /*----------------------------------------------------------------------------*/
 /*!
+* @brief Change array index to channel number.
+*
+* @param[in] ucIndex            array index.
+*
+* @retval ucChannelNum           ucChannelNum
+*/
+/*----------------------------------------------------------------------------*/
+UINT_8 aisIndex2ChannelNum(IN UINT_8 ucIndex)
+{
+	UINT_8 ucChannel;
+
+	/*Full2Partial*/
+	if (ucIndex >= 1 && ucIndex <= 14)
+		/*1---14*/
+		ucChannel = ucIndex;
+		/*1---14*/
+	else if (ucIndex >= 15 && ucIndex <= 22)
+		/*15---22*/
+		ucChannel = (ucIndex - 6) << 2;
+		/*36---64*/
+	else if (ucIndex >= 23 && ucIndex <= 34)
+		/*23---34*/
+		ucChannel = (ucIndex + 2) << 2;
+		/*100---144*/
+	else if (ucIndex >= 35 && ucIndex <= 39) {
+		/*35---39*/
+		ucIndex = ucIndex + 2;
+		ucChannel = (ucIndex << 2) + 1;
+		/*149---164*/
+	} else {
+		/*error*/
+		ucChannel = 0;
+	}
+	return ucChannel;
+}
+
+/*----------------------------------------------------------------------------*/
+/*!
+* @brief Full2Partial Process full scan channel info
+*
+* @param (none)
+*
+* @return (none)
+*/
+/*----------------------------------------------------------------------------*/
+
+VOID aisGetAndSetScanChannel(IN P_ADAPTER_T prAdapter)
+{
+	P_PARTIAL_SCAN_INFO PartialScanChannel = NULL;
+	UINT_8	*ucChannelp;
+	UINT_8	ucChannelNum;
+	int i = 1;
+	int t = 0;
+	/*Full2Partial*/
+
+	if (prAdapter->prGlueInfo->u4LastFullScanTime == 0) {
+		/*there is full scan before this time*/
+		DBGLOG(AIS, INFO, "Full2Partial u4LastFullScanTime=0\n");
+		return;
+	}
+	/*
+	if (prAdapter->prGlueInfo->ucChannelListNum == 0) {
+		DBGLOG(AIS, TRACE, "aisGetAndSetScanChannel ucChannelListNum=0\n");
+		return;
+	}
+	*/
+	if (prAdapter->prGlueInfo->puFullScan2PartialChannel != NULL) {
+		DBGLOG(AIS, TRACE, "Full2Partial puFullScan2PartialChannel not null\n");
+		return;
+	}
+
+	/*at here set channel info*/
+	PartialScanChannel = (P_PARTIAL_SCAN_INFO) kalMemAlloc(sizeof(PARTIAL_SCAN_INFO), VIR_MEM_TYPE);
+	if (PartialScanChannel == NULL) {
+		DBGLOG(AIS, INFO, "Full2Partial alloc PartialScanChannel fail\n");
+		return;
+	}
+	kalMemSet(PartialScanChannel, 0, sizeof(PARTIAL_SCAN_INFO));
+
+	ucChannelp = prAdapter->prGlueInfo->ucChannelNum;
+	while (i < FULL_SCAN_MAX_CHANNEL_NUM) {
+		if (ucChannelp[i] != 0) {
+			ucChannelNum = aisIndex2ChannelNum(i);
+			DBGLOG(AIS, TRACE, "Full2Partial i=%d, channel value=%d\n", i, ucChannelNum);
+			if (ucChannelNum != 0) {
+				if ((ucChannelNum >= 1) && (ucChannelNum <= 14))
+					PartialScanChannel->arChnlInfoList[t].eBand = BAND_2G4;
+				else
+					PartialScanChannel->arChnlInfoList[t].eBand = BAND_5G;
+
+				PartialScanChannel->arChnlInfoList[t].ucChannelNum = ucChannelNum;
+				t++;
+			}
+		}
+		i++;
+	}
+	DBGLOG(AIS, INFO, "Full2Partial channel num=%d\n", t);
+	if ((t > 0) && (t <= MAXIMUM_OPERATION_CHANNEL_LIST)) {
+		PartialScanChannel->ucChannelListNum = t;
+		prAdapter->prGlueInfo->puFullScan2PartialChannel = (PUINT_8)PartialScanChannel;
+	} else {
+		DBGLOG(AIS, INFO, "Full2Partial channel num great %d max channel number\n",
+			MAXIMUM_OPERATION_CHANNEL_LIST);
+		kalMemFree(PartialScanChannel, VIR_MEM_TYPE, sizeof(PARTIAL_SCAN_INFO));
+	}
+}
+
+/*----------------------------------------------------------------------------*/
+/*!
 * @brief The Core FSM engine of AIS(Ad-hoc, Infra STA)
 *
 * @param[in] eNextState Enum value of next AIS STATE
@@ -1893,6 +2002,7 @@ VOID aisFsmSteps(IN P_ADAPTER_T prAdapter, ENUM_AIS_STATE_T eNextState)
 	ENUM_AIS_STATE_T eOriPreState;
 
 	BOOLEAN fgIsTransition = (BOOLEAN) FALSE;
+	OS_SYSTIME rCurrentTime;
 
 	DEBUGFUNC("aisFsmSteps()");
 
@@ -1919,6 +2029,8 @@ VOID aisFsmSteps(IN P_ADAPTER_T prAdapter, ENUM_AIS_STATE_T eNextState)
 		fgIsTransition = (BOOLEAN) FALSE;
 
 		aisCheckPostponedDisconnTimeout(prAdapter, prAisFsmInfo);
+
+		GET_CURRENT_SYSTIME(&rCurrentTime);
 
 		/* Do tasks of the State that we just entered */
 		switch (prAisFsmInfo->eCurrentState) {
@@ -2104,6 +2216,15 @@ VOID aisFsmSteps(IN P_ADAPTER_T prAdapter, ENUM_AIS_STATE_T eNextState)
 					/* increase connection trial count for infrastructure connection */
 					if (prConnSettings->eOPMode == NET_TYPE_INFRA)
 						prAisFsmInfo->ucConnTrialCount++;
+
+					if (prAisFsmInfo->rJoinReqTime != 0 &&
+						CHECK_FOR_TIMEOUT(rCurrentTime,
+								  prAisFsmInfo->rJoinReqTime,
+								  SEC_TO_SYSTIME(AIS_JOIN_TIMEOUT))) {
+						eNextState = AIS_STATE_JOIN_FAILURE;
+						fgIsTransition = TRUE;
+						break;
+					}
 
 					/* 4 <A> Try to SCAN */
 					if (prAisFsmInfo->fgTryScan) {
@@ -2327,6 +2448,64 @@ VOID aisFsmSteps(IN P_ADAPTER_T prAdapter, ENUM_AIS_STATE_T eNextState)
 				ASSERT(0);
 			}
 
+			/*Full2Partial at here, chech sould update full scan to partial scan or not*/
+			if ((prAisFsmInfo->eCurrentState == AIS_STATE_ONLINE_SCAN) &&
+				(prScanReqMsg->eScanChannel == SCAN_CHANNEL_FULL) &&
+				(prScanReqMsg->ucSSIDType == SCAN_REQ_SSID_WILDCARD) &&
+				(prScanReqMsg->ucSSIDNum == 0)) {
+				/*this is a full scan*/
+				OS_SYSTIME rCurrentTime;
+				P_PARTIAL_SCAN_INFO channel_t;
+				P_GLUE_INFO_T pGlinfo;
+				UINT_32 u4size;
+
+				DBGLOG(AIS, INFO, "Full2Partial eScanChannel = %d, ucSSIDNum=%d\n",
+					prScanReqMsg->eScanChannel, prScanReqMsg->ucSSIDNum);
+				pGlinfo = prAdapter->prGlueInfo;
+				GET_CURRENT_SYSTIME(&rCurrentTime);
+				DBGLOG(AIS, TRACE, "Full2Partial LastFullST= %lld,CurrentT=%lld\n",
+					pGlinfo->u4LastFullScanTime, rCurrentTime);
+				if ((pGlinfo->u4LastFullScanTime == 0) ||
+					(CHECK_FOR_TIMEOUT(rCurrentTime, pGlinfo->u4LastFullScanTime,
+						SEC_TO_SYSTIME(UPDATE_FULL_TO_PARTIAL_SCAN_TIMEOUT)))) {
+					/*first full scan during connected*/
+					/*or time over 60s from last full scan*/
+					DBGLOG(AIS, INFO, "Full2Partial not update full scan\n");
+					pGlinfo->u4LastFullScanTime = rCurrentTime;
+					pGlinfo->ucTrScanType = 1;
+					kalMemSet(pGlinfo->ucChannelNum, 0, FULL_SCAN_MAX_CHANNEL_NUM);
+					if (pGlinfo->puFullScan2PartialChannel != NULL) {
+						kalMemFree(pGlinfo->puFullScan2PartialChannel,
+							VIR_MEM_TYPE, sizeof(PARTIAL_SCAN_INFO));
+						pGlinfo->puFullScan2PartialChannel = NULL;
+					}
+				} else {
+					DBGLOG(AIS, INFO, "Full2Partial update full scan to partial scan\n");
+
+					/*at here, we should update full scan to partial scan*/
+					aisGetAndSetScanChannel(prAdapter);
+
+					if (pGlinfo->puFullScan2PartialChannel != NULL) {
+						PUINT_8 pChanneltmp;
+						/* update full scan to partial scan */
+						pChanneltmp = pGlinfo->puFullScan2PartialChannel;
+						channel_t = (P_PARTIAL_SCAN_INFO)pChanneltmp;
+
+						/* set partial scan */
+						prScanReqMsg->ucChannelListNum = channel_t->ucChannelListNum;
+						u4size = sizeof(channel_t->arChnlInfoList);
+
+						DBGLOG(AIS, TRACE, "Full2Partial ChList=%d,u4size=%d\n",
+							channel_t->ucChannelListNum, u4size);
+
+						kalMemCopy(&(prScanReqMsg->arChnlInfoList),
+							&(channel_t->arChnlInfoList), u4size);
+						/* set scan channel type for partial scan */
+						prScanReqMsg->eScanChannel = SCAN_CHANNEL_SPECIFIED;
+					}
+				}
+			}
+
 			if (prAisFsmInfo->u4ScanIELength > 0) {
 				kalMemCopy(prScanReqMsg->aucIE, prAisFsmInfo->aucScanIEBuf,
 					   prAisFsmInfo->u4ScanIELength);
@@ -2379,6 +2558,7 @@ VOID aisFsmSteps(IN P_ADAPTER_T prAdapter, ENUM_AIS_STATE_T eNextState)
 			break;
 
 		case AIS_STATE_JOIN_FAILURE:
+			prAdapter->rWifiVar.rConnSettings.eReConnectLevel = RECONNECT_LEVEL_MIN;
 			prConnSettings->fgIsDisconnectedByNonRequest = TRUE;
 
 #if CFG_SUPPORT_RN
@@ -2452,6 +2632,9 @@ VOID aisFsmSteps(IN P_ADAPTER_T prAdapter, ENUM_AIS_STATE_T eNextState)
 				ASSERT(0);	/* Can't indicate CNM for channel acquiring */
 				return;
 			}
+
+			/* release channel */
+			aisFsmReleaseCh(prAdapter);
 
 			/* zero-ize */
 			kalMemZero(prMsgChReq, sizeof(MSG_CH_REQ_T));
@@ -3178,7 +3361,6 @@ enum _ENUM_AIS_STATE_T aisFsmJoinCompleteAction(IN struct _ADAPTER_T *prAdapter,
 								  prAisFsmInfo->rJoinReqTime,
 								  SEC_TO_SYSTIME(AIS_JOIN_TIMEOUT))) {
 					/* 4.a temrminate join operation */
-					prAdapter->rWifiVar.rConnSettings.eReConnectLevel = RECONNECT_LEVEL_MIN;
 					eNextState = AIS_STATE_JOIN_FAILURE;
 				} else {
 					/* 4.b send reconnect request */
@@ -3613,8 +3795,10 @@ VOID aisCheckPostponedDisconnTimeout(IN P_ADAPTER_T prAdapter, P_AIS_FSM_INFO_T 
 	/* 4 <2> Remove all pending connection request */
 	while (fgFound)
 		fgFound = aisFsmIsRequestPending(prAdapter, AIS_REQUEST_RECONNECT, TRUE);
+	if (prAisFsmInfo->eCurrentState == AIS_STATE_LOOKING_FOR)
+		prAisFsmInfo->eCurrentState = AIS_STATE_IDLE;
 	prConnSettings->fgIsDisconnectedByNonRequest = TRUE;
-	prAisBssInfo->u2DeauthReason = REASON_CODE_BEACON_TIMEOUT;
+	prAisBssInfo->u2DeauthReason = 100 * REASON_CODE_BEACON_TIMEOUT + prAisBssInfo->u2DeauthReason;
 	/* 4 <3> Indicate Disconnected Event to Host immediately. */
 	aisIndicationOfMediaStateToHost(prAdapter, PARAM_MEDIA_STATE_DISCONNECTED, FALSE);
 
