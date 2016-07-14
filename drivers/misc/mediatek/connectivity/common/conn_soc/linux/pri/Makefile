@@ -6,6 +6,7 @@ ccflags-y += \
 	-I$(src)/../../core/include \
 	-I$(src)/../../include \
 	-I$(src)/../include \
+	-I$(src)/../../$(MTK_PLATFORM)/include \
 	-I$(src)/../../../common_detect \
 	-I$(srctree)/drivers/misc/mediatek/btif/common/inc \
 	-I$(srctree)/drivers/misc/mediatek/mach/$(MTK_PLATFORM)/include/mach

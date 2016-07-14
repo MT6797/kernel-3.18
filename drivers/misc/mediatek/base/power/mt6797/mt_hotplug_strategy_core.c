@@ -158,6 +158,10 @@ static void hps_get_sysinfo(void)
 				max_idx1 = max =  max(max(lastpoll_htask1, lastpoll_htask2), avg_htask);
 				hps_sys.cluster_info[idx].hvyTsk_value = max;
 
+				if (hps_sys.cluster_info[idx].hvyTsk_value < 0)
+					pr_warn("%s: error, wrong hvyTsk=%d in cluster1\n",
+							__func__, hps_sys.cluster_info[idx].hvyTsk_value);
+
 				trace_sched_avg_heavy_task(lastpoll_htask1, lastpoll_htask2, avg_htask_scal, idx, max);
 			}
 			else if (idx == 2) {
@@ -171,8 +175,14 @@ static void hps_get_sysinfo(void)
 
 				avg_htask = ((avg_htask_scal_idx2%100) >= avg_heavy_task_threshold)?(avg_htask_scal_idx2/100+1):(avg_htask_scal_idx2/100);
 
-				max =  max(max(lastpoll_htask1, lastpoll_htask2), avg_htask);
+				max =  max(max(lastpoll_htask_idx2_1, lastpoll_htask_idx2_2), avg_htask);
+
 				hps_sys.cluster_info[idx].hvyTsk_value = (max - max_idx1);
+
+				if (hps_sys.cluster_info[idx].hvyTsk_value < 0)
+					pr_warn("%s: error, wrong hvyTsk=%d in cluster2(=%d-%d)\n",
+							__func__, hps_sys.cluster_info[idx].hvyTsk_value,
+							max, max_idx1);
 
 				trace_sched_avg_heavy_task(lastpoll_htask1, lastpoll_htask2, avg_htask_scal, idx, (max-max_idx1));
 			}else
