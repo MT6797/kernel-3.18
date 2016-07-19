@@ -55,6 +55,7 @@ static int last_offset = 0;
 static bool selective_read_eeprom(kal_uint16 addr, BYTE* data)
 {
 	char pu_send_cmd[2] = {(char)(addr >> 8) , (char)(addr & 0xFF) };
+	printk("deng, %s() \n",__func__);
     if(addr > S5K3P3_MAX_OFFSET)
         return false;
 	if(iReadRegI2C(pu_send_cmd, 2, (u8*)data, 1, S5K3P3_EEPROM_WRITE_ID)<0)
@@ -63,39 +64,60 @@ static bool selective_read_eeprom(kal_uint16 addr, BYTE* data)
 }
 
 static bool _read_3P3_eeprom(kal_uint16 addr, BYTE* data, kal_uint32 size ){
-	int i = 0;
+	int i = 0, count = 0;
 	int offset = addr;
-	for(i = 0; i < size; i++) {
+	printk("zhouzhenshu %s offset=0x%x  size=%d  \n",__func__,offset,size);
+	// get PDAF calibration step 1 data
+	offset = 0x0782; 
+	printk("deng, %s() \n",__func__);
+	for(i = 0; i < 496; i++) {
 		if(!selective_read_eeprom(offset, &data[i])){
+			LOG_INF("read_eeprom 0x%0x %d fail \n",offset, data[i]);
 			return false;
 		}
-		LOG_INF("read_eeprom 0x%0x %d\n",offset, data[i]);
+		LOG_INF("read_eeprom 0x%0x    data[%d]0x%x\n",offset, i, data[i]);
 		offset++;
+		count++;
 	}
+	
+	// get PDAF calibration step 2 data
+	offset = 0x0972;
+	for(i = 496; i < 1404; i++) {
+		if(!selective_read_eeprom(offset, &data[i])){
+			LOG_INF("read_eeprom 0x%0x %d fail \n",offset, data[i]);
+			return false;
+		}
+		LOG_INF("read_eeprom 0x%0x    data[%d]0x%x\n",offset, i, data[i]);
+		offset++;
+		count++;
+	}
+   for(i=1404;i<2048;i++){
+       data[i]=0x00; 
+   }
+	
+	LOG_INF("[mcnex]read_eeprom data count = %d\n",count);
 	get_done = true;
 	last_size = size;
 	last_offset = addr;
     return true;
 }
 
-bool read_3P3_eeprom( kal_uint16 addr, BYTE* data, kal_uint32 size){
-	addr = 0x763;
-	size = 1404;
-	//BYTE header[9]= {0};
-	//_read_3P3_eeprom(0x0000, header, 9);
-
-	LOG_INF("read 3P3 eeprom, size = %d\n", size);
-
-	if(!get_done || last_size != size || last_offset != addr) {
-		if(!_read_3P3_eeprom(addr, s5k3P3_eeprom_data, size)){
+bool read_3P3_eeprom( kal_uint16 addr, BYTE* data, kal_uint32 size)
+{
+	printk("deng, %s() \n",__func__);
+	LOG_INF("read_otp_pdaf_data enter,get_done=%d,last_size=%d,size=%d,last_offset=%d,addr=%d\n",get_done,last_size,size,last_offset,addr);
+	if(1){//!get_done || last_size != size || last_offset != addr) {
+		//if(!_read_eeprom(addr, eeprom_data, size)){
+		if(!_read_3P3_eeprom(addr, data, size)){
 			get_done = 0;
             last_size = 0;
             last_offset = 0;
+			LOG_INF("read_otp_pdaf_data fail");
 			return false;
 		}
 	}
-
-	memcpy(data, s5k3P3_eeprom_data, size);
+	//memcpy(data, eeprom_data, size);
+	LOG_INF("read_otp_pdaf_data end");
     return true;
 }
 

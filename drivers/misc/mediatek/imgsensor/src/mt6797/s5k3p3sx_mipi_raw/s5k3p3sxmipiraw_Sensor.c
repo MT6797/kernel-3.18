@@ -49,7 +49,7 @@
 #include "s5k3p3sxmipiraw_Sensor.h"
 
 #define PFX "S5K3P3SX_camera_sensor"
-#define LOG_INF(format, args...)	pr_debug(PFX "[%s] " format, __FUNCTION__, ##args)
+#define LOG_INF(format, args...)	pr_debug(PFX "[%s line:%d] " format, __FUNCTION__,__LINE__, ##args)
 
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
 
@@ -157,7 +157,7 @@ static imgsensor_info_struct imgsensor_info = {
 	.hs_video_delay_frame = 3,
 	.slim_video_delay_frame = 3,
 
-	.isp_driving_current = ISP_DRIVING_2MA,
+	.isp_driving_current = ISP_DRIVING_8MA,
 	.sensor_interface_type = SENSOR_INTERFACE_TYPE_MIPI,
 	.mipi_sensor_type = MIPI_OPHY_NCSI2, //0,MIPI_OPHY_NCSI2;  1,MIPI_OPHY_CSI2
 	.mipi_settle_delay_mode = 0, //0,MIPI_SETTLEDELAY_AUTO; 1,MIPI_SETTLEDELAY_MANNUAL
@@ -1179,7 +1179,7 @@ static kal_uint32 get_info(MSDK_SCENARIO_ID_ENUM scenario_id,
 	sensor_info->IHDR_Support = imgsensor_info.ihdr_support;
 	sensor_info->IHDR_LE_FirstLine = imgsensor_info.ihdr_le_firstline;
 	sensor_info->SensorModeNum = imgsensor_info.sensor_mode_num;
-	sensor_info->PDAF_Support = 1;
+	sensor_info->PDAF_Support = 1;/*0: NO PDAF, 1: PDAF Raw Data mode, 2:PDAF Virtual Channel mode*/
 	sensor_info->SensorMIPILaneNumber = imgsensor_info.mipi_lane_num;
 	sensor_info->SensorClockFreq = imgsensor_info.mclk;
 	sensor_info->SensorClockDividCount = 3; /* not use */
@@ -1456,7 +1456,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 
 	MSDK_SENSOR_REG_INFO_STRUCT *sensor_reg_data=(MSDK_SENSOR_REG_INFO_STRUCT *) feature_para;
 
-	LOG_INF("feature_id = %d\n", feature_id);
+	LOG_INF("deng, feature_id = %d\n", feature_id);
 	switch (feature_id) {
 		case SENSOR_FEATURE_GET_PERIOD:
 			*feature_return_para_16++ = imgsensor.line_length;
@@ -1509,7 +1509,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
                      get_default_framerate_by_scenario((MSDK_SCENARIO_ID_ENUM)*(feature_data), (MUINT32 *)(uintptr_t)(*(feature_data+1)));
 			break;
 		case SENSOR_FEATURE_GET_PDAF_DATA:
-			LOG_INF("SENSOR_FEATURE_GET_PDAF_DATA\n");
+			printk("deng,SENSOR_FEATURE_GET_PDAF_DATA\n");
 			read_3P3_eeprom((kal_uint16 )(*feature_data),(char*)(uintptr_t)(*(feature_data+1)),(kal_uint32)(*(feature_data+2)));
 			break;
 
@@ -1561,12 +1561,14 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 
 			switch (*feature_data) {
 				case MSDK_SCENARIO_ID_CAMERA_CAPTURE_JPEG:
+				case MSDK_SCENARIO_ID_VIDEO_PREVIEW:
+					printk("deng, 1565 MSDK_SCENARIO_ID_CAMERA_CAPTURE_JPEG \n");
 					memcpy((void *)PDAFinfo,(void *)&imgsensor_pd_info,sizeof(SET_PD_BLOCK_INFO_T));
 					break;
-				case MSDK_SCENARIO_ID_VIDEO_PREVIEW:
 				case MSDK_SCENARIO_ID_HIGH_SPEED_VIDEO:
 				case MSDK_SCENARIO_ID_SLIM_VIDEO:
 				case MSDK_SCENARIO_ID_CAMERA_PREVIEW:
+					printk("deng, 1572 MSDK_SCENARIO_ID_CAMERA_PREVIEW \n");
 				default:
 					break;
 			}
@@ -1576,7 +1578,8 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 			//PDAF capacity enable or not, 2p8 only full size support PDAF
 			switch (*feature_data) {
 				case MSDK_SCENARIO_ID_CAMERA_CAPTURE_JPEG:
-					*(MUINT32 *)(uintptr_t)(*(feature_data+1)) = 0;
+					printk("deng, 1582 MSDK_SCENARIO_ID_CAMERA_CAPTURE_JPEG \n");
+					*(MUINT32 *)(uintptr_t)(*(feature_data+1)) = 1;
 					break;
 				case MSDK_SCENARIO_ID_VIDEO_PREVIEW:
 					*(MUINT32 *)(uintptr_t)(*(feature_data+1)) = 0; // video & capture use same setting
