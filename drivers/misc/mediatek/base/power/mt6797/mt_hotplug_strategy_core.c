@@ -214,44 +214,6 @@ static void hps_get_sysinfo(void)
 #endif
 }
 
-struct hrtimer cpuhp_timer;
-static int cpuhp_timer_func(unsigned long data)
-{
-	unsigned int cpu = smp_processor_id();
-
-	aee_rr_rec_hotplug_footprint(cpu, 91);
-
-	if (hps_ctxt.tsk_struct_ptr) {
-		pr_err("HPS task info (run on CPU %d)\n", task_cpu(hps_ctxt.tsk_struct_ptr));
-		if (hps_ctxt.tsk_struct_ptr->on_cpu == 0)
-			show_stack(hps_ctxt.tsk_struct_ptr, NULL);
-	} else {
-		pr_err("%s: no hps_main task\n", __func__);
-	}
-
-	if (aee_mode != 4) {
-		if (tracing_is_on()) {
-			aee_rr_rec_hotplug_footprint(cpu, 92);
-			tracing_off();
-			aee_rr_rec_hotplug_footprint(cpu, 93);
-			aee_kernel_exception_api(__FILE__, __LINE__, DB_OPT_FTRACE,
-				"\nhps_main hang\n", "hps_main hang");
-		} else {
-			aee_rr_rec_hotplug_footprint(cpu, 94);
-			aee_kernel_exception_api(__FILE__, __LINE__, 0,
-				"\nhps_main hang\n", "hps_main hang");
-		}
-		aee_rr_rec_hotplug_footprint(cpu, 95);
-		sysrq_sched_debug_show_at_AEE();
-		aee_rr_rec_hotplug_footprint(cpu, 96);
-	} else {
-		BUG_ON(1);
-	}
-	aee_rr_rec_hotplug_footprint(cpu, 97);
-
-	return HRTIMER_NORESTART;
-}
-
 /*
  * hps task main loop
  */
@@ -261,9 +223,6 @@ static int _hps_task_main(void *data)
 	void (*algo_func_ptr)(void);
 
 	hps_ctxt_print_basic(1);
-
-	hrtimer_init(&cpuhp_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-	cpuhp_timer.function = (void *)&cpuhp_timer_func;
 
 	algo_func_ptr = hps_algo_main;
 
@@ -307,10 +266,7 @@ static int _hps_task_main(void *data)
 			hps_ctxt.is_interrupt = 0;
 
 		/*execute hotplug algorithm */
-		if (!hrtimer_active(&cpuhp_timer))
-			hrtimer_start(&cpuhp_timer, ns_to_ktime(CPUHP_INTERVAL), HRTIMER_MODE_REL);
 		(*algo_func_ptr) ();
-		hrtimer_cancel(&cpuhp_timer);
 
 #ifdef CONFIG_CPU_ISOLATION
 HPS_WAIT_EVENT:
