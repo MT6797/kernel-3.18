@@ -35,7 +35,7 @@
 			ocv_board_compesate = <0 >;
 			r_fg_board_base = <1000 >;
 			r_fg_board_slope = <1000 >;
-			car_tune_value = <110 >;   /* aka.jiang add important */
+			car_tune_value = <121 >;   /* aka.jiang add important */
 
 			/* HW Fuel gague  */
 			current_detect_r_fg = <10 >;	/* Unit: mA */
