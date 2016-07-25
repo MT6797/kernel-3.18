@@ -263,7 +263,7 @@ static void lcm_init(void)
 	mt_set_gpio_mode(LCD_BIAS_EN_PIN, GPIO_MODE_00);
 	mt_set_gpio_dir(LCD_BIAS_EN_PIN, GPIO_DIR_OUT);
 	mt_set_gpio_out(LCD_BIAS_EN_PIN, GPIO_OUT_ONE);	
-
+        MDELAY(5);
 	mt_set_gpio_mode(LCM_RESET_PIN, GPIO_MODE_00);
 	mt_set_gpio_dir(LCM_RESET_PIN, GPIO_DIR_OUT);
 	mt_set_gpio_out(LCM_RESET_PIN, GPIO_OUT_ONE);
@@ -277,6 +277,7 @@ static void lcm_init(void)
 	
 #else
 	gpio_set_value(LCD_BIAS_EN_PIN, 1);	
+        MDELAY(5);
 	gpio_set_value(LCM_RESET_PIN, 1);
 	MDELAY(1);
 
@@ -398,7 +399,7 @@ static unsigned int lcm_compare_id(void)
 	mt_set_gpio_mode(LCD_BIAS_EN_PIN, GPIO_MODE_00);
 	mt_set_gpio_dir(LCD_BIAS_EN_PIN, GPIO_DIR_OUT);
 	mt_set_gpio_out(LCD_BIAS_EN_PIN, GPIO_OUT_ONE);
-
+        MDELAY(5);
 	mt_set_gpio_mode(LCM_RESET_PIN, GPIO_MODE_00);
 	mt_set_gpio_dir(LCM_RESET_PIN, GPIO_DIR_OUT);
 	mt_set_gpio_out(LCM_RESET_PIN, GPIO_OUT_ONE);
