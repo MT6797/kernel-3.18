@@ -138,6 +138,7 @@ static int hall_probe(struct platform_device *pdev)
     struct input_dev *input;
     char pyhs_str[50];
     int ret = 0;
+	int state;
     
     HALL_DEBUG_LOG("Enter!");
     info = kzalloc(sizeof(struct hall_info), GFP_KERNEL);
@@ -173,6 +174,9 @@ static int hall_probe(struct platform_device *pdev)
 
     input_set_drvdata(info->idev, info);
     platform_set_drvdata(pdev, info);
+	state = !!gpio_get_value(info->irq_gpio);
+	if(state == 1)
+	__change_bit(info->sw_code, input->sw);
 
     ret = sysfs_create_group(&info->idev->dev.kobj, &hall_attribute_group);
     if (ret < 0){
