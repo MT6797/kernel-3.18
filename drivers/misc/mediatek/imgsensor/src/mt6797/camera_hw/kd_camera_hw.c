@@ -180,6 +180,7 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0},
 	   },
 	  },
+	  #ifdef OV16880_MIPI_RAW
 	  {SENSOR_DRVNAME_OV16880_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -193,6 +194,7 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 2}
 	   },
 	  },
+	  #endif
 	  {SENSOR_DRVNAME_S5K2P8_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
