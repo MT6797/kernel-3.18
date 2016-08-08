@@ -128,6 +128,7 @@ PowerCust PowerCustList = {
 
 PowerUp PowerOnList = {
 	{
+#if defined(OV23850_MIPI_RAW)
 	 {SENSOR_DRVNAME_OV23850_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -141,6 +142,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 5},
 	   },
 	  },
+#endif
+
+#if defined(S5K3M2_MIPI_RAW)
 	  {SENSOR_DRVNAME_S5K3M2_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -154,6 +158,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0},
 	   },
 	  },
+#endif
+
+#if defined(S5K3P3SX_MIPI_RAW)
 	  {SENSOR_DRVNAME_S5K3P3SX_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -167,6 +174,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0},
 	   },
 	  },
+#endif
+
+#if defined(S5K5E8YX_MIPI_RAW)
 	 {SENSOR_DRVNAME_S5K5E8YX_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -180,7 +190,25 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0},
 	   },
 	  },
-	  
+#endif
+
+#if defined(S5K5E2YA_MIPI_RAW)
+	 {SENSOR_DRVNAME_S5K5E2YA_MIPI_RAW,
+	  {
+	   {SensorMCLK, Vol_High, 0},
+	   {DOVDD, Vol_1800, 0},
+	   {AVDD, Vol_2800, 0},
+	   {DVDD, Vol_1200, 0},
+	   {AFVDD, Vol_2800, 5},
+	   {PDN, Vol_Low, 4},
+	   {PDN, Vol_High, 0},
+	   {RST, Vol_Low, 1},
+	   {RST, Vol_High, 0},
+	   },
+	  },
+#endif
+
+
 #if defined(IMX258_MIPI_RAW)
 	  {SENSOR_DRVNAME_IMX258_MIPI_RAW,
 	  {
@@ -197,7 +225,7 @@ PowerUp PowerOnList = {
 	  },
 #endif	  
 
-	  #ifdef OV16880_MIPI_RAW
+#if defined(OV16880_MIPI_RAW)
 	  {SENSOR_DRVNAME_OV16880_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -211,7 +239,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 2}
 	   },
 	  },
-	  #endif
+#endif
+
+#if defined(S5K2P8_MIPI_RAW)
 	  {SENSOR_DRVNAME_S5K2P8_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -225,19 +255,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0},
 	   },
 	  },
-	  {SENSOR_DRVNAME_IMX258_MIPI_RAW,
-	  {
-	   {SensorMCLK, Vol_High, 0},
-	   {PDN, Vol_Low, 0},
-	   {RST, Vol_Low, 0},
-	   {DOVDD, Vol_1800, 0},
-	   {AVDD, Vol_2800, 0},
-	   {DVDD, Vol_1200, 0},
-	   {AFVDD, Vol_2800, 1},
-	   {PDN, Vol_High, 0},
-	   {RST, Vol_High, 0}
-	   },
-	  },
+#endif
+
+#if defined(IMX377_MIPI_RAW)
 	  {SENSOR_DRVNAME_IMX377_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -251,6 +271,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0}
 	   },
 	  },
+#endif
+
+#if defined(S5K2X8_MIPI_RAW)
 	  {SENSOR_DRVNAME_S5K2X8_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -264,6 +287,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0}
 	   },
 	  },
+#endif
+
+#if defined(IMX214_MIPI_RAW)
 	  {SENSOR_DRVNAME_IMX214_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -277,6 +303,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0}
 	   },
 	  },
+#endif
+
+#if defined(IMX214_MIPI_MONO_RAW)
 	  {SENSOR_DRVNAME_IMX214_MIPI_MONO,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -290,6 +319,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0}
 	   },
 	  },
+#endif
+
+#if defined(IMX230_MIPI_RAW)
 	  {SENSOR_DRVNAME_IMX230_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -303,6 +335,10 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0}
 	   },
 	  },
+
+#endif
+#if defined(S5K3L8_MIPI_RAW)
+
 	  {SENSOR_DRVNAME_S5K3L8_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -316,6 +352,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0}
 	   },
 	  },
+#endif
+
+#if defined(IMX362_MIPI_RAW)
 	  {SENSOR_DRVNAME_IMX362_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -329,6 +368,9 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0}
 	   },
 	  },
+#endif
+
+#if defined(S5K2L7_MIPI_RAW)
 	  {SENSOR_DRVNAME_S5K2L7_MIPI_RAW,
 	  {
 	   {SensorMCLK, Vol_High, 0},
@@ -342,6 +384,8 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 5}
 	   },
 	  },
+#endif
+
 #if defined(IMX318_MIPI_RAW)
 	  {SENSOR_DRVNAME_IMX318_MIPI_RAW,
 	  {
