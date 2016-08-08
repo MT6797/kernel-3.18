@@ -180,6 +180,23 @@ PowerUp PowerOnList = {
 	   {RST, Vol_High, 0},
 	   },
 	  },
+	  
+#if defined(IMX258_MIPI_RAW)
+	  {SENSOR_DRVNAME_IMX258_MIPI_RAW,
+	  {
+	   {SensorMCLK, Vol_High, 0},
+	   {PDN, Vol_Low, 0},
+	   {RST, Vol_Low, 0},
+	   {DOVDD, Vol_1800, 0},
+	   {AVDD, Vol_2800, 0},
+	   {DVDD, Vol_1200, 0},
+	   {AFVDD, Vol_2800, 1},
+	   {PDN, Vol_High, 0},
+	   {RST, Vol_High, 0}
+	   },
+	  },
+#endif	  
+
 	  #ifdef OV16880_MIPI_RAW
 	  {SENSOR_DRVNAME_OV16880_MIPI_RAW,
 	  {

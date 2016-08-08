@@ -73,7 +73,7 @@ static int s4AF_WriteReg(u16 a_u2Data)
 {
 	int i4RetValue = 0;
 
-	char puSendCmd[2] = {(char)(((a_u2Data >> 8) & 0x03) | 0xc0), (char)(a_u2Data & 0xff)};
+	char puSendCmd[2] = {(char)(((a_u2Data >> 8) & 0x03) | 0xc4), (char)(a_u2Data & 0xff)};
 
 	g_pstAF_I2Cclient->addr = AF_I2C_SLAVE_ADDR;
 
@@ -89,6 +89,48 @@ static int s4AF_WriteReg(u16 a_u2Data)
 
 	return 0;
 }
+
+
+static int init_setting(void)
+{
+	int  i4RetValue = 0;
+	
+	char puSendCmd1[2]={(char)(0xD4),(char)(0x32)};//A point=50d 
+	char puSendCmd2[2]={(char)(0xDC),(char)(0x64)};//B point=100d 
+	char puSendCmd3[2]={(char)(0xE4),(char)(0x21)};//A-B point step mode:200us/4Lsd 
+	char puSendCmd4[2]={(char)(0xCC),(char)(0x4B)};//92Hz,Fast mode
+
+	LOG_INF("init_setting start 151201!!\n");
+
+ i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd1, 2);	
+    if (i4RetValue < 0) 
+    {
+        LOG_INF("[BU6424AF]I2C send failed!!\n");
+		return -1;
+    }
+ i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd2, 2);
+    if (i4RetValue < 0) 
+    {
+        LOG_INF("[BU6424AF]I2C send failed!!\n");
+        return -1;
+    }
+ i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd3, 2);
+    if (i4RetValue < 0) 
+    {
+        LOG_INF("[BU6424AF]I2C send failed!!\n");
+        return -1;
+    }
+ i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd4, 2);
+    if (i4RetValue < 0) 
+    {
+        LOG_INF("[BU6424AF]I2C send failed!!\n");
+        return -1;
+    }
+	
+    LOG_INF("init_setting end 151201!!\n");
+	return 0;
+}
+
 
 static inline int getAFInfo(__user stAF_MotorInfo * pstMotorInfo)
 {
@@ -128,6 +170,7 @@ static inline int moveAF(unsigned long a_u4Position)
 		unsigned short InitPos;
 
 		ret = s4AF_ReadReg(&InitPos);
+		init_setting();
 
 		if (ret == 0) {
 			LOG_INF("Init Pos %6d\n", InitPos);
