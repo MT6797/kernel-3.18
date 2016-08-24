@@ -28,6 +28,10 @@ endif
 config MTK_AFS12X
         bool "AFS12X for MediaTek package"
         default n
+
+config NB_FINGER_CLEAR_SUPPORT
+        bool "NB FINGER CLEAR SUPPORT"
+        default n
         
 if MTK_FINGERPRINT_SELECT = "FPC1145"
 config FPC_FINGERPRINT

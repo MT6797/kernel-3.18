@@ -62,6 +62,9 @@
 #include <linux/sched.h>
 #include "mt_spi_hal.h"
 #include <mt_spi.h>
+#ifdef CONFIG_NB_FINGER_CLEAR_SUPPORT
+#include <mt-plat/mt_gpio.h>  
+#endif
 
 struct fprint_dev {
 	dev_t idd;
@@ -511,7 +514,14 @@ int mas_probe(struct spi_device *spi) {
 		return -1;
  	}
 	printd("%s: start\n", __func__);
-		
+#ifdef CONFIG_NB_FINGER_CLEAR_SUPPORT
+	mt_set_gpio_mode(234 | 0x80000000, GPIO_MODE_01);
+	mt_set_gpio_mode(235 | 0x80000000, GPIO_MODE_01);
+        mt_set_gpio_mode(236 | 0x80000000, GPIO_MODE_01);
+        mt_set_gpio_mode(237 | 0x80000000, GPIO_MODE_01);
+        mt_set_gpio_mode(86 | 0x80000000, GPIO_MODE_01);
+#endif
+	
 	plat_set_gpio(splat);
 	smas->spi = spi;
 	smas->spi->max_speed_hz = SPI_SPEED;

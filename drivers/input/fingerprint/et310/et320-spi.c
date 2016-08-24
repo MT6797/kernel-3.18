@@ -61,7 +61,9 @@
 #include <linux/sched.h>
 #include "mt_spi_hal.h"
 #include <mt_spi.h>
-
+#ifdef CONFIG_NB_FINGER_CLEAR_SUPPORT
+#include <mt-plat/mt_gpio.h>
+#endif
 
 #include "et320.h"
 ///////////////////////
@@ -1157,8 +1159,16 @@ static int __init fp_probe(struct spi_device *spi)
  	}
 
 	DEBUG_PRINT("%s initial\n", __func__);
+#ifdef CONFIG_NB_FINGER_CLEAR_SUPPORT
+        mt_set_gpio_mode(234 | 0x80000000, GPIO_MODE_01);
+	 mt_set_gpio_mode(235 | 0x80000000, GPIO_MODE_01);
+         mt_set_gpio_mode(236 | 0x80000000, GPIO_MODE_01);
+        mt_set_gpio_mode(237 | 0x80000000, GPIO_MODE_01);
+        mt_set_gpio_mode(86 | 0x80000000, GPIO_MODE_01);
+#endif
 
-	/* Allocate driver data */
+
+        /* Allocate driver data */
 	fp = kzalloc(sizeof(*fp), GFP_KERNEL);
 	if (fp == NULL)
 		return -ENOMEM;
