@@ -56,7 +56,7 @@ static const unsigned char LCD_MODULE_ID = 0x01;
 #define LCM_DSI_CMD_MODE 0
 #define FRAME_WIDTH (1440)
 #define FRAME_HEIGHT (2560)
-#define GPIO_65132_EN GPIO_LCD_BIAS_ENP_PIN
+#define GPIO_65133_EN GPIO_LCD_BIAS_ENP_PIN
 
 #define REGFLAG_PORT_SWAP 0xFFFA
 #define REGFLAG_DELAY 0xFFFC
@@ -145,6 +145,7 @@ static struct LCM_setting_table lcm_initialization_setting[] = {
 	{0xBC,  2, {0x50,0x32}},
 	{0xCA,  6, {0x00,0xC0,0xC0,0xC0,0xC0,0xC0,0xC0}},
 	{0xB0,  1, {0x03}},
+        {0x36,  1, {0x42}},
 
 	{0x29, 0, {} },
 	{REGFLAG_DELAY, 20, {} },
@@ -328,13 +329,13 @@ static void lcm_get_params(LCM_PARAMS *params)
 	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_RX] = MIPITX_PHY_LANE_3;
 #endif
 }
-
+ 
 #ifdef BUILD_LK
 
-#define TPS65132_SLAVE_ADDR_WRITE  0x7C
-static struct mt_i2c_t TPS65132_i2c;
+#define TPS65133_SLAVE_ADDR_WRITE  0x7C
+static struct mt_i2c_t TPS65133_i2c;
 
-static int TPS65132_write_byte(kal_uint8 addr, kal_uint8 value)
+static int TPS65133_write_byte(kal_uint8 addr, kal_uint8 value)
 {
 	kal_uint32 ret_code = I2C_OK;
 	kal_uint8 write_data[2];
@@ -343,14 +344,14 @@ static int TPS65132_write_byte(kal_uint8 addr, kal_uint8 value)
 	write_data[0] = addr;
 	write_data[1] = value;
 
-	TPS65132_i2c.id = I2C_I2C_LCD_BIAS_CHANNEL; /* I2C2; */
+	TPS65133_i2c.id = I2C_I2C_LCD_BIAS_CHANNEL; /* I2C2; */
 	/* Since i2c will left shift 1 bit, we need to set FAN5405 I2C address to >>1 */
-	TPS65132_i2c.addr = (TPS65132_SLAVE_ADDR_WRITE >> 1);
-	TPS65132_i2c.mode = ST_MODE;
-	TPS65132_i2c.speed = 100;
+	TPS65133_i2c.addr = (TPS65133_SLAVE_ADDR_WRITE >> 1);
+	TPS65133_i2c.mode = ST_MODE;
+	TPS65133_i2c.speed = 100;
 	len = 2;
 
-	ret_code = i2c_write(&TPS65132_i2c, write_data, len);
+	ret_code = i2c_write(&TPS65133_i2c, write_data, len);
 	/* printf("%s: i2c_write: ret_code: %d\n", __func__, ret_code); */
 
 	return ret_code;
@@ -361,8 +362,8 @@ static int TPS65132_write_byte(kal_uint8 addr, kal_uint8 value)
 /* extern int mt8193_i2c_write(u16 addr, u32 data); */
 /* extern int mt8193_i2c_read(u16 addr, u32 *data); */
 
-/* #define TPS65132_write_byte(add, data)  mt8193_i2c_write(add, data) */
-/* #define TPS65132_read_byte(add)  mt8193_i2c_read(add) */
+/* #define TPS65133_write_byte(add, data)  mt8193_i2c_write(add, data) */
+/* #define TPS65133_read_byte(add)  mt8193_i2c_read(add) */
 
 
 #endif
@@ -398,12 +399,12 @@ static void lcm_init(void)
 	MDELAY(10);
 #endif
 
-	mt_set_gpio_mode(GPIO_65132_EN, GPIO_MODE_00);
-	mt_set_gpio_dir(GPIO_65132_EN, GPIO_DIR_OUT);
-	mt_set_gpio_out(GPIO_65132_EN, GPIO_OUT_ONE);
+	mt_set_gpio_mode(GPIO_65133_EN, GPIO_MODE_00);
+	mt_set_gpio_dir(GPIO_65133_EN, GPIO_DIR_OUT);
+	mt_set_gpio_out(GPIO_65133_EN, GPIO_OUT_ONE);
 	MDELAY(5);
 
-	ret = TPS65132_write_byte(cmd, data);
+	ret = TPS65133_write_byte(cmd, data);
 	if (ret)
 		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write error----\n", cmd);
 	else
@@ -412,7 +413,7 @@ static void lcm_init(void)
 	cmd = 0x01;
 	data = 0x0E;
 
-	ret = TPS65132_write_byte(cmd, data);
+	ret = TPS65133_write_byte(cmd, data);
 	if (ret)
 		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write error----\n", cmd);
 	else
@@ -437,9 +438,9 @@ static void lcm_init(void)
 
 static void lcm_suspend(void)
 {
-	mt_set_gpio_mode(GPIO_65132_EN, GPIO_MODE_00);
-	mt_set_gpio_dir(GPIO_65132_EN, GPIO_DIR_OUT);
-	mt_set_gpio_out(GPIO_65132_EN, GPIO_OUT_ZERO);
+	mt_set_gpio_mode(GPIO_65133_EN, GPIO_MODE_00);
+	mt_set_gpio_dir(GPIO_65133_EN, GPIO_DIR_OUT);
+	mt_set_gpio_out(GPIO_65133_EN, GPIO_OUT_ZERO);
 	push_table(lcm_suspend_setting, sizeof(lcm_suspend_setting) / sizeof(struct LCM_setting_table), 1);
 	SET_RESET_PIN(1);
         MDELAY(10);
@@ -492,12 +493,12 @@ static void lcm_update(unsigned int x, unsigned int y, unsigned int width, unsig
 	dsi_set_cmdq(data_array, 1, 0);
 }
 
-#define LCM_ID_R63419_boyi (0x0003)
+#define LCM_ID_R63419_by (0x0003)
 
 static unsigned int lcm_compare_id(void)
 {
 
-        unsigned char buffer[5];
+	unsigned char buffer[5];
 	unsigned int array[16];
 	int i;
 	unsigned int lcd_id = 0;
@@ -507,12 +508,12 @@ static unsigned int lcm_compare_id(void)
 	cmd = 0x00;
 	data = 0x0E;
 
-	mt_set_gpio_mode(GPIO_65132_EN, GPIO_MODE_00);
-	mt_set_gpio_dir(GPIO_65132_EN, GPIO_DIR_OUT);
-	mt_set_gpio_out(GPIO_65132_EN, GPIO_OUT_ONE);
+	mt_set_gpio_mode(GPIO_65133_EN, GPIO_MODE_00);
+	mt_set_gpio_dir(GPIO_65133_EN, GPIO_DIR_OUT);
+	mt_set_gpio_out(GPIO_65133_EN, GPIO_OUT_ONE);
 	MDELAY(5);
 
-	ret = TPS65132_write_byte(cmd, data);
+	ret = TPS65133_write_byte(cmd, data);
 	if (ret)
 		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write error----\n", cmd);
 	else
@@ -521,7 +522,7 @@ static unsigned int lcm_compare_id(void)
 	cmd = 0x01;
 	data = 0x0E;
 
-	ret = TPS65132_write_byte(cmd, data);
+	ret = TPS65133_write_byte(cmd, data);
 	if (ret)
 		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write error----\n", cmd);
 	else
@@ -554,10 +555,11 @@ dprintf(0, "%s, LK r63419 debug: r63419 id0 = 0x%08x\n", __func__, buffer[0]);
 dprintf(0, "%s, LK r63419 debug: r63419 id1 = 0x%08x\n", __func__, buffer[1]);
  
 
-	if (lcd_id == LCM_ID_R63419_boyi)
+	if (lcd_id != LCM_ID_R63419_by)
 		return 1;
 	else
                 return 0;
+
 
 }
 
@@ -584,8 +586,8 @@ static void lcm_setbacklight_cmdq(void *handle, unsigned int level)
 }
 
 
-LCM_DRIVER r63419_wqhd_boyi_vdo_lcm_drv = {
-	.name = "r63419_wqhd_boyi_vdo",
+LCM_DRIVER r63419_wqhd_lide_vdo_lcm_drv = {
+	.name = "r63419_wqhd_lide_vdo",
 	.set_util_funcs = lcm_set_util_funcs,
 	.get_params = lcm_get_params,
 	.init = lcm_init,
