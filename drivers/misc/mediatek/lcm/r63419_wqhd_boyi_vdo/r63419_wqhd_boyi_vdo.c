@@ -1,67 +1,47 @@
-/* Copyright Statement:
- *
- * This software/firmware and related documentation ("MediaTek Software") are
- * protected under relevant copyright laws. The information contained herein
- * is confidential and proprietary to MediaTek Inc. and/or its licensors.
- * Without the prior written permission of MediaTek inc. and/or its licensors,
- * any reproduction, modification, use or disclosure of MediaTek Software,
- * and information contained herein, in whole or in part, shall be strictly prohibited.
- */
-/* MediaTek Inc. (C) 2015. All rights reserved.
- *
- * BY OPENING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY ACKNOWLEDGES AND AGREES
- * THAT THE SOFTWARE/FIRMWARE AND ITS DOCUMENTATIONS ("MEDIATEK SOFTWARE")
- * RECEIVED FROM MEDIATEK AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER ON
- * AN "AS-IS" BASIS ONLY. MEDIATEK EXPRESSLY DISCLAIMS ANY AND ALL WARRANTIES,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NONINFRINGEMENT.
- * NEITHER DOES MEDIATEK PROVIDE ANY WARRANTY WHATSOEVER WITH RESPECT TO THE
- * SOFTWARE OF ANY THIRD PARTY WHICH MAY BE USED BY, INCORPORATED IN, OR
- * SUPPLIED WITH THE MEDIATEK SOFTWARE, AND RECEIVER AGREES TO LOOK ONLY TO SUCH
- * THIRD PARTY FOR ANY WARRANTY CLAIM RELATING THERETO. RECEIVER EXPRESSLY ACKNOWLEDGES
- * THAT IT IS RECEIVER'S SOLE RESPONSIBILITY TO OBTAIN FROM ANY THIRD PARTY ALL PROPER LICENSES
- * CONTAINED IN MEDIATEK SOFTWARE. MEDIATEK SHALL ALSO NOT BE RESPONSIBLE FOR ANY MEDIATEK
- * SOFTWARE RELEASES MADE TO RECEIVER'S SPECIFICATION OR TO CONFORM TO A PARTICULAR
- * STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND MEDIATEK'S ENTIRE AND
- * CUMULATIVE LIABILITY WITH RESPECT TO THE MEDIATEK SOFTWARE RELEASED HEREUNDER WILL BE,
- * AT MEDIATEK'S OPTION, TO REVISE OR REPLACE THE MEDIATEK SOFTWARE AT ISSUE,
- * OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE CHARGE PAID BY RECEIVER TO
- * MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
- */
-
+#ifndef BUILD_LK
+#include <linux/string.h>
+#include <linux/kernel.h>
+#endif
 #include "lcm_drv.h"
 
 #ifdef BUILD_LK
-#include <platform/upmu_common.h>
-#include <platform/mt_gpio.h>
-#include <platform/mt_i2c.h>
-#include <platform/mt_pmic.h>
-#include <string.h>
+	#include <platform/upmu_common.h>
+	#include <platform/mt_gpio.h>
+	#include <platform/mt_i2c.h>
+	#include <platform/mt_pmic.h>
+	#include <string.h>
 #elif defined(BUILD_UBOOT)
-#include <asm/arch/mt_gpio.h>
+	#include <asm/arch/mt_gpio.h>
 #else
-#include <mach/mt_pm_ldo.h>
-#include <mach/mt_gpio.h>
+#ifdef CONFIG_MTK_LEGACY
+	#include <mach/mt_pm_ldo.h>
+	#include <mach/mt_gpio.h>
 #endif
-#include <cust_gpio_usage.h>
-#include <cust_i2c.h>
-
+#endif
+#ifdef BUILD_LK
 #define LCD_DEBUG(fmt)  dprintf(CRITICAL, fmt)
+#else
+#define LCD_DEBUG(fmt)  pr_debug(fmt)
+#endif
+#ifdef CONFIG_MTK_LEGACY
+#include <cust_i2c.h>
+#include <mach/gpio_const.h>
+#include <cust_gpio_usage.h>
+#endif
 
 /* static unsigned char lcd_id_pins_value = 0xFF; */
-static const unsigned char LCD_MODULE_ID = 0x01;
-/* --------------------------------------------------------------------------- */
-/* Local Constants */
-/* --------------------------------------------------------------------------- */
-#define LCM_DSI_CMD_MODE 0
-#define FRAME_WIDTH (1440)
-#define FRAME_HEIGHT (2560)
+static const unsigned char LCD_MODULE_ID = 0x01; /*  haobing modified 2013.07.11 */
+/**
+ * Local Constants
+ */
+#define LCM_DSI_CMD_MODE	0
+#define FRAME_WIDTH	(1440)
+#define FRAME_HEIGHT	(2560)
 #define GPIO_65132_EN GPIO_LCD_BIAS_ENP_PIN
 
-#define REGFLAG_PORT_SWAP 0xFFFA
-#define REGFLAG_DELAY 0xFFFC
-/* END OF REGISTERS MARKER */
-#define REGFLAG_END_OF_TABLE 0xFFFD
+#define REGFLAG_PORT_SWAP	0xFFFA
+#define REGFLAG_DELAY	0xFFFC
+#define REGFLAG_END_OF_TABLE	0xFFFD   /* END OF REGISTERS MARKER */
 
 #ifndef TRUE
 #define TRUE 1
@@ -70,43 +50,186 @@ static const unsigned char LCD_MODULE_ID = 0x01;
 #ifndef FALSE
 #define FALSE 0
 #endif
-/* static unsigned int lcm_esd_test = FALSE;      ///only for ESD test */
-/* --------------------------------------------------------------------------- */
-/* Local Variables */
-/* --------------------------------------------------------------------------- */
+/* static unsigned int lcm_esd_test = FALSE; */     /* only for ESD test */
+/**
+ * Local Variables
+ */
 
 static const unsigned int BL_MIN_LEVEL = 20;
 static LCM_UTIL_FUNCS lcm_util;
 
-#define SET_RESET_PIN(v) (lcm_util.set_reset_pin((v)))
-#define MDELAY(n) (lcm_util.mdelay(n))
-static unsigned int lcm_compare_id(void);
-/* --------------------------------------------------------------------------- */
-/* Local Functions */
-/* --------------------------------------------------------------------------- */
+#define SET_RESET_PIN(v)	(lcm_util.set_reset_pin((v)))
+#define MDELAY(n)		(lcm_util.mdelay(n))
+
+/**
+ * Local Functions
+ */
 #define dsi_set_cmd_by_cmdq_dual(handle, cmd, count, ppara, force_update) \
-    lcm_util.dsi_set_cmdq_V23(handle, cmd, count, ppara, force_update)
+		lcm_util.dsi_set_cmdq_V23(handle, cmd, (unsigned char)(count), \
+					  (unsigned char *)(ppara), (unsigned char)(force_update))
+#define dsi_set_cmdq_V2(cmd, count, ppara, force_update) lcm_util.dsi_set_cmdq_V2(cmd, count, ppara, force_update)
+#define dsi_set_cmdq(pdata, queue_size, force_update)	lcm_util.dsi_set_cmdq(pdata, queue_size, force_update)
+#define wrtie_cmd(cmd)		lcm_util.dsi_write_cmd(cmd)
+#define write_regs(addr, pdata, byte_nums)		lcm_util.dsi_write_regs(addr, pdata, byte_nums)
+#define read_reg(cmd)					lcm_util.dsi_dcs_read_lcm_reg(cmd)
+#define read_reg_v2(cmd, buffer, buffer_size)		lcm_util.dsi_dcs_read_lcm_reg_v2(cmd, buffer, buffer_size)
+#define dsi_swap_port(swap)				lcm_util.dsi_swap_port(swap)
 
-#define dsi_set_cmdq_V2(cmd, count, ppara, force_update) \
-    lcm_util.dsi_set_cmdq_V2(cmd, count, ppara, force_update)
-#define dsi_set_cmdq(pdata, queue_size, force_update) \
-    lcm_util.dsi_set_cmdq(pdata, queue_size, force_update)
-#define wrtie_cmd(cmd) \
-    lcm_util.dsi_write_cmd(cmd)
-#define write_regs(addr, pdata, byte_nums) \
-    lcm_util.dsi_write_regs(addr, pdata, byte_nums)
-#define read_reg(cmd) \
-    lcm_util.dsi_dcs_read_lcm_reg(cmd)
-#define read_reg_v2(cmd, buffer, buffer_size) \
-    lcm_util.dsi_dcs_read_lcm_reg_v2(cmd, buffer, buffer_size)
-#define dsi_swap_port(swap) \
-    lcm_util.dsi_swap_port(swap)
+#define set_gpio_lcd_enp(cmd) lcm_util.set_gpio_lcd_enp_bias(cmd)
 
-#ifdef BUILD_LK
-void __attribute__((weak)) mt6331_upmu_set_rg_vgp1_en(kal_uint32 en)
+#ifndef BUILD_LK
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/fs.h>
+#include <linux/slab.h>
+#include <linux/init.h>
+#include <linux/list.h>
+#include <linux/i2c.h>
+#include <linux/irq.h>
+/*#include <linux/jiffies.h> */
+#include <linux/uaccess.h>
+/*#include <linux/delay.h> */
+#include <linux/interrupt.h>
+#include <linux/io.h>
+#include <linux/platform_device.h>
+/*****************************************************************************
+* Define
+*****************************************************************************/
+
+#ifdef CONFIG_MTK_LEGACY
+#define TPS_I2C_BUSNUM  I2C_I2C_LCD_BIAS_CHANNEL/*for I2C channel 0 */
+#endif
+#define I2C_ID_NAME "tps65132"
+#define TPS_ADDR 0x3E
+
+/*****************************************************************************
+* GLobal Variable
+*****************************************************************************/
+#ifdef CONFIG_MTK_LEGACY
+static struct i2c_board_info tps65132_board_info __initdata = {I2C_BOARD_INFO(I2C_ID_NAME, TPS_ADDR)};
+#endif
+
+#if !defined(CONFIG_MTK_LEGACY)
+static const struct of_device_id lcm_of_match[] = {
+		{ .compatible = "mediatek,i2c_lcd_bias" },
+		{},
+};
+#endif
+
+static struct i2c_client *tps65132_i2c_client;
+
+
+/*****************************************************************************
+* Function Prototype
+*****************************************************************************/
+static int tps65132_probe(struct i2c_client *client, const struct i2c_device_id *id);
+static int tps65132_remove(struct i2c_client *client);
+/*****************************************************************************
+* Data Structure
+*****************************************************************************/
+
+struct tps65132_dev	{
+struct i2c_client	*client;
+
+};
+
+static const struct i2c_device_id tps65132_id[] = {
+	{ I2C_ID_NAME, 0 },
+	{ }
+};
+
+/*
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36))
+static struct i2c_client_address_data addr_data = { .forces = forces,};
+#endif
+*/
+static struct i2c_driver tps65132_iic_driver = {
+	.id_table	= tps65132_id,
+	.probe		= tps65132_probe,
+	.remove		= tps65132_remove,
+	.driver		= {
+		.owner	= THIS_MODULE,
+		.name	= "tps65132",
+#if !defined(CONFIG_MTK_LEGACY)
+		.of_match_table = lcm_of_match,
+#endif
+	},
+};
+/*****************************************************************************
+* Extern Area
+*****************************************************************************/
+
+/*****************************************************************************
+* Function
+*****************************************************************************/
+static int tps65132_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
-	return;
+	pr_debug("tps65132_iic_probe\n");
+	pr_debug("TPS: info==>name=%s addr=0x%x\n", client->name, client->addr);
+	tps65132_i2c_client  = client;
+	return 0;
 }
+
+
+static int tps65132_remove(struct i2c_client *client)
+{
+	pr_debug("tps65132_remove\n");
+	tps65132_i2c_client = NULL;
+	i2c_unregister_device(client);
+	return 0;
+}
+
+
+int tps65132_write_bytes(unsigned char addr, unsigned char value)
+{
+	int ret = 0;
+	struct i2c_client *client = tps65132_i2c_client;
+	char write_data[2] = {0};
+
+	if (client == NULL) {
+		pr_debug("ERROR!!tps65132_i2c_client is null\n");
+		return 0;
+	}
+
+	write_data[0] = addr;
+	write_data[1] = value;
+	ret = i2c_master_send(client, write_data, 2);
+	if (ret < 0)
+		pr_debug("tps65132 write data fail !!\n");
+	return ret;
+}
+EXPORT_SYMBOL_GPL(tps65132_write_bytes);
+
+
+/*
+* module load/unload record keeping
+*/
+
+static int __init tps65132_iic_init(void)
+{
+	pr_debug("tps65132_iic_init\n");
+#ifdef CONFIG_MTK_LEGACY
+	i2c_register_board_info(TPS_I2C_BUSNUM, &tps65132_board_info, 1);
+	pr_debug("tps65132_iic_init2\n");
+#endif
+	i2c_add_driver(&tps65132_iic_driver);
+	pr_debug("tps65132_iic_init success\n");
+	return 0;
+}
+
+static void __exit tps65132_iic_exit(void)
+{
+	pr_debug("tps65132_iic_exit\n");
+	i2c_del_driver(&tps65132_iic_driver);
+}
+
+module_init(tps65132_iic_init);
+module_exit(tps65132_iic_exit);
+
+MODULE_AUTHOR("Xiaokuan Shi");
+MODULE_DESCRIPTION("MTK TPS65132 I2C Driver");
+MODULE_LICENSE("GPL");
+
 #endif
 
 struct LCM_setting_table {
@@ -155,8 +278,8 @@ static struct LCM_setting_table lcm_initialization_setting[] = {
 
 #if 0
 static struct LCM_setting_table lcm_set_window[] = {
-	{0x2A, 4, {0x00, 0x00, (FRAME_WIDTH >> 8), (FRAME_WIDTH & 0xFF)} },
-	{0x2B, 4, {0x00, 0x00, (FRAME_HEIGHT >> 8), (FRAME_HEIGHT & 0xFF)} },
+	{0x2A,	4,	{0x00, 0x00, (FRAME_WIDTH>>8), (FRAME_WIDTH&0xFF)} },
+	{0x2B,	4,	{0x00, 0x00, (FRAME_HEIGHT>>8), (FRAME_HEIGHT&0xFF)} },
 	{REGFLAG_END_OF_TABLE, 0x00, {} }
 };
 
@@ -182,6 +305,7 @@ static struct LCM_setting_table lcm_normal_sleep_mode_in_setting[] = {
 
 #endif
 
+#if 0 /* defined but not used */
 static struct LCM_setting_table lcm_deep_sleep_mode_in_setting[] = {
 	/* Display off sequence */
 	{0x28, 1, {0x00} },
@@ -197,54 +321,60 @@ static struct LCM_setting_table lcm_deep_sleep_mode_in_setting[] = {
 
 	{REGFLAG_END_OF_TABLE, 0x00, {} }
 };
-
+#endif
 static struct LCM_setting_table lcm_suspend_setting[] = {
-	{0x28, 0, {} },
+	/* Display off sequence */
+	{ 0x28, 0, {} },
+	{REGFLAG_DELAY, 20, {} },
 	{0x10, 0, {} },
-	{REGFLAG_DELAY, 120, {} }
+	{0xB0, 1, {0x00} },
+	{0xB1, 1, {0x01} },
+	{REGFLAG_DELAY, 80, {} },
 };
 
+#if 0 /* defined but not used */
 static struct LCM_setting_table lcm_backlight_level_setting[] = {
-	{0x51, 1, {0xFF} },
-	{REGFLAG_END_OF_TABLE, 0x00, {} }
+	{ 0x51, 1, {0xFF} },
+	{ REGFLAG_END_OF_TABLE, 0x00, {} }
 };
-
+#endif
 static void push_table(struct LCM_setting_table *table, unsigned int count, unsigned char force_update)
 {
 	unsigned int i;
 
 	for (i = 0; i < count; i++) {
 		unsigned cmd;
+
 		cmd = table[i].cmd;
 
 		switch (cmd) {
-			case REGFLAG_DELAY:
+		case REGFLAG_DELAY:
 #ifdef BUILD_LK
-				dprintf(0, "[LK]REGFLAG_DELAY\n");
+			dprintf(0, "[LK]REGFLAG_DELAY\n");
 #endif
-				if (table[i].count <= 10)
-					MDELAY(table[i].count);
-				else
-					MDELAY(table[i].count);
-				break;
+			if (table[i].count <= 10)
+				MDELAY(table[i].count);
+			else
+				MDELAY(table[i].count);
+			break;
 
-			case REGFLAG_END_OF_TABLE:
-				break;
-			case REGFLAG_PORT_SWAP:
+		case REGFLAG_END_OF_TABLE:
+			break;
+		case REGFLAG_PORT_SWAP:
 #ifdef BUILD_LK
-				dprintf(0, "[LK]push_table end\n");
+			dprintf(0, "[LK]push_table end\n");
 #endif
-				dsi_swap_port(1);
-				break;
-			default:
-				dsi_set_cmdq_V2(cmd, table[i].count, table[i].para_list, force_update);
+			dsi_swap_port(1);
+			break;
+		default:
+			dsi_set_cmdq_V2(cmd, table[i].count, table[i].para_list, force_update);
 		}
 	}
 }
 
-/* --------------------------------------------------------------------------- */
-/* LCM Driver Implementations */
-/* --------------------------------------------------------------------------- */
+/**
+ * LCM Driver Implementations
+ */
 
 static void lcm_set_util_funcs(const LCM_UTIL_FUNCS *util)
 {
@@ -256,76 +386,78 @@ static void lcm_get_params(LCM_PARAMS *params)
 {
 	memset(params, 0, sizeof(LCM_PARAMS));
 
-	params->type = LCM_TYPE_DSI;
+	params->type   = LCM_TYPE_DSI;
 
-	params->width = FRAME_WIDTH;
+	params->width  = FRAME_WIDTH;
 	params->height = FRAME_HEIGHT;
 	params->lcm_if = LCM_INTERFACE_DSI_DUAL;
 	params->lcm_cmd_if = LCM_INTERFACE_DSI0;
 
 #if (LCM_DSI_CMD_MODE)
-	params->dsi.mode = CMD_MODE;
+	params->dsi.mode   = CMD_MODE;
 #else
-	params->dsi.mode = BURST_VDO_MODE;  /* have no SYNC_PULSE_VDO_MODE; */
+	params->dsi.mode   = BURST_VDO_MODE;/*have no SYNC_PULSE_VDO_MODE; */
 #endif
+
 	params->dsi.dual_dsi_type = DUAL_DSI_CMD;
 	/* DSI */
 	/* Command mode setting */
-	params->dsi.LANE_NUM = LCM_FOUR_LANE;
-	/* The following defined the fomat for data coming from LCD engine. */
-	params->dsi.data_format.color_order = LCM_COLOR_ORDER_RGB;
-	params->dsi.data_format.trans_seq = LCM_DSI_TRANS_SEQ_MSB_FIRST;
-	params->dsi.data_format.padding = LCM_DSI_PADDING_ON_LSB;
-	params->dsi.data_format.format = LCM_DSI_FORMAT_RGB888;
+	params->dsi.LANE_NUM			= LCM_FOUR_LANE;
+	/*The following defined the fomat for data coming from LCD engine. */
+	params->dsi.data_format.color_order	= LCM_COLOR_ORDER_RGB;
+	params->dsi.data_format.trans_seq	= LCM_DSI_TRANS_SEQ_MSB_FIRST;
+	params->dsi.data_format.padding		= LCM_DSI_PADDING_ON_LSB;
+	params->dsi.data_format.format		= LCM_DSI_FORMAT_RGB888;
 
 	/* Highly depends on LCD driver capability. */
 	params->dsi.packet_size = 256;
 	params->dsi.ssc_disable = 0;
 	params->dsi.ssc_range = 3;
-	/* video mode timing */
+	/*video mode timing */
 
 	params->dsi.PS = LCM_PACKED_PS_24BIT_RGB888;
 
-	params->dsi.vertical_sync_active = 4;
-	params->dsi.vertical_backporch = 6;
-	params->dsi.vertical_frontporch = 20;
-	params->dsi.vertical_frontporch_for_low_power = 600;
-	params->dsi.vertical_active_line = FRAME_HEIGHT;
+	params->dsi.vertical_sync_active				= 4;
+	params->dsi.vertical_backporch					= 6;
+	params->dsi.vertical_frontporch					= 20;
+	params->dsi.vertical_frontporch_for_low_power			= 600;
+	params->dsi.vertical_active_line				= FRAME_HEIGHT;
 
-	params->dsi.horizontal_sync_active = 10;
-	params->dsi.horizontal_backporch = 30;
-	params->dsi.horizontal_frontporch = 60;
-	params->dsi.horizontal_active_pixel = FRAME_WIDTH;
+	params->dsi.horizontal_sync_active				= 8;
+	params->dsi.horizontal_backporch				= 60;/* hsa+hbp 60~80; */
+	params->dsi.horizontal_frontporch				= 150;/* >150 */
+	params->dsi.horizontal_active_pixel				= FRAME_WIDTH;
 #if (LCM_DSI_CMD_MODE)
-	params->dsi.PLL_CLOCK = 423;
+	params->dsi.PLL_CLOCK = 450; /*this value must be in MTK suggested table */
 #else
+	/* params->dsi.PLL_CLOCK = 480; */
 	params->dsi.PLL_CLOCK = 423;
 #endif
-	params->dsi.ufoe_enable = 1;
+	params->dsi.ufoe_enable  = 1;
 	params->dsi.ufoe_params.lr_mode_en = 1;
 
 	params->dsi.esd_check_enable = 0;//1;
-	params->dsi.customization_esd_check_enable = 0;
-	params->dsi.lcm_esd_check_table[0].cmd = 0x53;  /* 0x0A; */
-	params->dsi.lcm_esd_check_table[0].count = 1;
-	params->dsi.lcm_esd_check_table[0].para_list[0] = 0x2C; /* 0x1C; */
+	params->dsi.customization_esd_check_enable      = 0;
+	params->dsi.lcm_esd_check_table[0].cmd          = 0x53;/*0x0A; */
+	params->dsi.lcm_esd_check_table[0].count        = 1;
+	params->dsi.lcm_esd_check_table[0].para_list[0] = 0x2C;/*0x1C; */
 
-	/* for R63419A Lane Swap */
 #if 0
+	/* for R63419A Lane Swap */
 	params->dsi.lane_swap_en = 1;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_0] = MIPITX_PHY_LANE_2;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_1] = MIPITX_PHY_LANE_CK;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_2] = MIPITX_PHY_LANE_3;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_3] = MIPITX_PHY_LANE_1;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_CK] = MIPITX_PHY_LANE_0;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_RX] = MIPITX_PHY_LANE_CK;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_0]	= MIPITX_PHY_LANE_2;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_1]	= MIPITX_PHY_LANE_CK;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_2]	= MIPITX_PHY_LANE_3;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_3]	= MIPITX_PHY_LANE_1;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_CK]	= MIPITX_PHY_LANE_0;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_1][MIPITX_PHY_LANE_RX]	= MIPITX_PHY_LANE_CK;
 
-	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_0] = MIPITX_PHY_LANE_CK;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_1] = MIPITX_PHY_LANE_2;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_2] = MIPITX_PHY_LANE_1;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_3] = MIPITX_PHY_LANE_0;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_CK] = MIPITX_PHY_LANE_3;
-	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_RX] = MIPITX_PHY_LANE_3;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_0]	= MIPITX_PHY_LANE_CK;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_1]	= MIPITX_PHY_LANE_2;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_2]	= MIPITX_PHY_LANE_1;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_3]	= MIPITX_PHY_LANE_0;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_CK]	= MIPITX_PHY_LANE_3;
+	params->dsi.lane_swap[MIPITX_PHY_PORT_0][MIPITX_PHY_LANE_RX]	= MIPITX_PHY_LANE_3;
 #endif
 }
 
@@ -343,7 +475,7 @@ static int TPS65132_write_byte(kal_uint8 addr, kal_uint8 value)
 	write_data[0] = addr;
 	write_data[1] = value;
 
-	TPS65132_i2c.id = I2C_I2C_LCD_BIAS_CHANNEL; /* I2C2; */
+	TPS65132_i2c.id = I2C_I2C_LCD_BIAS_CHANNEL;/*I2C2; */
 	/* Since i2c will left shift 1 bit, we need to set FAN5405 I2C address to >>1 */
 	TPS65132_i2c.addr = (TPS65132_SLAVE_ADDR_WRITE >> 1);
 	TPS65132_i2c.mode = ST_MODE;
@@ -351,37 +483,59 @@ static int TPS65132_write_byte(kal_uint8 addr, kal_uint8 value)
 	len = 2;
 
 	ret_code = i2c_write(&TPS65132_i2c, write_data, len);
-	/* printf("%s: i2c_write: ret_code: %d\n", __func__, ret_code); */
+	/*printf("%s: i2c_write: ret_code: %d\n", __func__, ret_code); */
 
 	return ret_code;
 }
 
 #else
 
-/* extern int mt8193_i2c_write(u16 addr, u32 data); */
-/* extern int mt8193_i2c_read(u16 addr, u32 *data); */
-
-/* #define TPS65132_write_byte(add, data)  mt8193_i2c_write(add, data) */
-/* #define TPS65132_read_byte(add)  mt8193_i2c_read(add) */
-
+#if 0
+#define TPS65132_write_byte(add, data)  mt8193_i2c_write(add, data)
+#define TPS65132_read_byte(add)  mt8193_i2c_read(add)
+#endif
 
 #endif
 
 static void lcm_init_power(void)
 {
+#if 0
+#ifdef BUILD_LK
 	mt6331_upmu_set_rg_vgp1_en(1);
+#else
+	pr_debug("%s, begin\n", __func__);
+	hwPowerOn(MT6331_POWER_LDO_VGP1, VOL_DEFAULT, "LCM_DRV");
+	pr_debug("%s, end\n", __func__);
+#endif
+#endif
 }
 
 
 static void lcm_resume_power(void)
 {
+#if 0
+#ifdef BUILD_LK
 	mt6331_upmu_set_rg_vgp1_en(1);
+#else
+	pr_debug("%s, begin\n", __func__);
+	hwPowerOn(MT6331_POWER_LDO_VGP1, VOL_DEFAULT, "LCM_DRV");
+	pr_debug("%s, end\n", __func__);
+#endif
+#endif
 }
 
 
 static void lcm_suspend_power(void)
 {
+#if 0
+#ifdef BUILD_LK
 	mt6331_upmu_set_rg_vgp1_en(0);
+#else
+	pr_debug("%s, begin\n", __func__);
+	hwPowerDown(MT6331_POWER_LDO_VGP1, "LCM_DRV");
+	pr_debug("%s, end\n", __func__);
+#endif
+#endif
 }
 
 
@@ -390,45 +544,63 @@ static void lcm_init(void)
 	unsigned char cmd = 0x0;
 	unsigned char data = 0xFF;
 	int ret = 0;
+
 	cmd = 0x00;
 	data = 0x0E;
 
-#if 0
-	SET_RESET_PIN(0);
-	MDELAY(10);
-#endif
-
+#ifdef CONFIG_MTK_LEGACY
 	mt_set_gpio_mode(GPIO_65132_EN, GPIO_MODE_00);
 	mt_set_gpio_dir(GPIO_65132_EN, GPIO_DIR_OUT);
 	mt_set_gpio_out(GPIO_65132_EN, GPIO_OUT_ONE);
+#else
+	set_gpio_lcd_enp(1);
+#endif
 	MDELAY(5);
-
+#ifdef BUILD_LK
 	ret = TPS65132_write_byte(cmd, data);
 	if (ret)
 		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write error----\n", cmd);
 	else
 		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write success----\n", cmd);
+#else
+	ret = tps65132_write_bytes(cmd, data);
+	if (ret < 0)
+		pr_debug("[KERNEL]r63419----tps6132---cmd=%0x-- i2c write error-----\n", cmd);
+	else
+		pr_debug("[KERNEL]r63419----tps6132---cmd=%0x-- i2c write success-----\n", cmd);
+#endif
 
 	cmd = 0x01;
 	data = 0x0E;
-
+#ifdef BUILD_LK
 	ret = TPS65132_write_byte(cmd, data);
 	if (ret)
 		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write error----\n", cmd);
 	else
 		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write success----\n", cmd);
+#else
+	ret = tps65132_write_bytes(cmd, data);
+	if (ret < 0)
+		pr_debug("[KERNEL]r63419----tps6132---cmd=%0x-- i2c write error-----\n", cmd);
+	else
+		pr_debug("[KERNEL]r63419----tps6132---cmd=%0x-- i2c write success-----\n", cmd);
+#endif
 
+	SET_RESET_PIN(0);
+	MDELAY(10);
 	SET_RESET_PIN(1);
-	MDELAY(1);
+	/* MDELAY(1); */
+	MDELAY(10);
 	/* MDELAY(10); */
 	SET_RESET_PIN(0);
 	MDELAY(10);
+	/* MDELAY(10); */
 	SET_RESET_PIN(1);
 	MDELAY(10);
 
 	/* when phone initial , config output high, enable backlight drv chip */
 	push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table),
-	           1);
+		   1);
 
 #ifdef BUILD_LK
 	dprintf(0, "[LK]push_table end\n");
@@ -437,12 +609,17 @@ static void lcm_init(void)
 
 static void lcm_suspend(void)
 {
+#ifdef CONFIG_MTK_LEGACY
 	mt_set_gpio_mode(GPIO_65132_EN, GPIO_MODE_00);
 	mt_set_gpio_dir(GPIO_65132_EN, GPIO_DIR_OUT);
 	mt_set_gpio_out(GPIO_65132_EN, GPIO_OUT_ZERO);
-	push_table(lcm_suspend_setting, sizeof(lcm_suspend_setting) / sizeof(struct LCM_setting_table), 1);
-	SET_RESET_PIN(1);
+#else
+	set_gpio_lcd_enp(0);
         MDELAY(10);
+        SET_RESET_PIN(1);
+	MDELAY(10);
+#endif
+	push_table(lcm_suspend_setting, sizeof(lcm_suspend_setting) / sizeof(struct LCM_setting_table), 1);
 }
 
 static void lcm_resume(void)
@@ -455,79 +632,53 @@ static void lcm_resume(void)
 	lcm_init();
 }
 
-static void lcm_update(unsigned int x, unsigned int y, unsigned int width, unsigned int height)
+#if 0 /* defined but not used */
+static void lcm_update(unsigned int x, unsigned int y,
+		       unsigned int width, unsigned int height)
 {
 	unsigned int x0 = x;
 	unsigned int y0 = y;
 	unsigned int x1 = x0 + width - 1;
 	unsigned int y1 = y0 + height - 1;
 
-	unsigned char x0_MSB = ((x0 >> 8) & 0xFF);
-	unsigned char x0_LSB = (x0 & 0xFF);
-	unsigned char x1_MSB = ((x1 >> 8) & 0xFF);
-	unsigned char x1_LSB = (x1 & 0xFF);
-	unsigned char y0_MSB = ((y0 >> 8) & 0xFF);
-	unsigned char y0_LSB = (y0 & 0xFF);
-	unsigned char y1_MSB = ((y1 >> 8) & 0xFF);
-	unsigned char y1_LSB = (y1 & 0xFF);
+	unsigned char x0_MSB = ((x0>>8)&0xFF);
+	unsigned char x0_LSB = (x0&0xFF);
+	unsigned char x1_MSB = ((x1>>8)&0xFF);
+	unsigned char x1_LSB = (x1&0xFF);
+	unsigned char y0_MSB = ((y0>>8)&0xFF);
+	unsigned char y0_LSB = (y0&0xFF);
+	unsigned char y1_MSB = ((y1>>8)&0xFF);
+	unsigned char y1_LSB = (y1&0xFF);
 
 	unsigned int data_array[16];
 
 	data_array[0] = 0x00053902;
-	data_array[1] = (x1_MSB << 24) | (x0_LSB << 16) | (x0_MSB << 8) | 0x2a;
+	data_array[1] = (x1_MSB<<24)|(x0_LSB<<16)|(x0_MSB<<8)|0x2a;
 	data_array[2] = (x1_LSB);
 	dsi_set_cmdq(data_array, 3, 1);
 
 	data_array[0] = 0x00053902;
-	data_array[1] = (y1_MSB << 24) | (y0_LSB << 16) | (y0_MSB << 8) | 0x2b;
+	data_array[1] = (y1_MSB<<24)|(y0_LSB<<16)|(y0_MSB<<8)|0x2b;
 	data_array[2] = (y1_LSB);
 	dsi_set_cmdq(data_array, 3, 1);
-	/*BEGIN PN:DTS2013013101431 modified by s00179437 , 2013-01-31 */
-	/* delete high speed packet */
-	/* data_array[0]=0x00290508; */
-	/* dsi_set_cmdq(data_array, 1, 1); */
-	/*END PN:DTS2013013101431 modified by s00179437 , 2013-01-31 */
+	/*BEGIN PN:DTS2013013101431 modified by s00179437 , 2013-01-31*/
+	/*delete high speed packet */
+	/*data_array[0] =0x00290508; */
+	/*dsi_set_cmdq(data_array, 1, 1); */
+	/*END PN:DTS2013013101431 modified by s00179437 , 2013-01-31*/
 
 	data_array[0] = 0x002c3909;
 	dsi_set_cmdq(data_array, 1, 0);
 }
+#endif
 
-#define LCM_ID_R63419_boyi (0x0003)
+#define LCM_ID_R63419 (0x3419)
 
 static unsigned int lcm_compare_id(void)
 {
-
-        unsigned char buffer[5];
+	unsigned char buffer[5];
 	unsigned int array[16];
-	int i;
 	unsigned int lcd_id = 0;
-        unsigned char cmd = 0x0;
-	unsigned char data = 0xFF;
-	int ret = 0;
-	cmd = 0x00;
-	data = 0x0E;
-
-	mt_set_gpio_mode(GPIO_65132_EN, GPIO_MODE_00);
-	mt_set_gpio_dir(GPIO_65132_EN, GPIO_DIR_OUT);
-	mt_set_gpio_out(GPIO_65132_EN, GPIO_OUT_ONE);
-	MDELAY(5);
-
-	ret = TPS65132_write_byte(cmd, data);
-	if (ret)
-		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write error----\n", cmd);
-	else
-		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write success----\n", cmd);
-
-	cmd = 0x01;
-	data = 0x0E;
-
-	ret = TPS65132_write_byte(cmd, data);
-	if (ret)
-		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write error----\n", cmd);
-	else
-		dprintf(0, "[LK]r63419----tps6132----cmd=%0x--i2c write success----\n", cmd);
-
-
 
 	SET_RESET_PIN(1);
 	MDELAY(10);
@@ -535,72 +686,69 @@ static unsigned int lcm_compare_id(void)
 	MDELAY(10);
 	SET_RESET_PIN(1);
 	MDELAY(10);
-//	array[0] = 0x00053700;  /* read id return two byte,version and id */
-//	dsi_set_cmdq(array, 1, 1);
-//array[0] = 0x0029b004;  /* read id return two byte,version and id */
-       // array[1] = 0x0000370a;
-       // array[2] = 0x000006a1;
-
-        //dsi_set_cmdq(array, 3, 1);
-        array[0] = 0x00023700;	 
+	array[0] = 0x00053700;/* read id return two byte, version and id */
 	dsi_set_cmdq(array, 1, 1);
 
-	read_reg_v2(0xA1, buffer, 2);
+	read_reg_v2(0xBF, buffer, 5);
 	MDELAY(20);
-	lcd_id = buffer[1];
+	lcd_id = (buffer[2] << 8) | buffer[3];
 
+#ifdef BUILD_LK
 	dprintf(0, "%s, LK r63419 debug: r63419 id = 0x%08x\n", __func__, lcd_id);
-dprintf(0, "%s, LK r63419 debug: r63419 id0 = 0x%08x\n", __func__, buffer[0]);
-dprintf(0, "%s, LK r63419 debug: r63419 id1 = 0x%08x\n", __func__, buffer[1]);
- 
+#else
+	pr_debug("%s, kernel r63419 horse debug: r63419 id = 0x%08x\n", __func__, lcd_id);
+#endif
 
-	if (lcd_id == LCM_ID_R63419_boyi)
+	if (lcd_id == LCM_ID_R63419)
 		return 1;
 	else
-                return 0;
+		return 0;
 
 }
 
 static unsigned int lcm_ata_check(unsigned char *buffer)
 {
 #ifndef BUILD_LK
+
 	return 1;
 #endif
 }
 
 static void lcm_setbacklight_cmdq(void *handle, unsigned int level)
 {
-	dprintf(0, "%s,lk R63419 backlight: level = %d\n", __func__, level);
-
-	/* Refresh value of backlight level. */
-
 	unsigned int cmd = 0x51;
 	unsigned int count = 1;
 	unsigned int value = level;
+
+#ifdef BUILD_LK
+	dprintf(0, "%s, lk R63419 backlight: level = %d\n", __func__, level);
+#else
+	pr_debug("%s, kernel R63419 backlight: level = %d\n", __func__, level);
+#endif
+	/* Refresh value of backlight level. */
+
 	dsi_set_cmd_by_cmdq_dual(handle, cmd, count, &value, 1);
-	/* lcm_backlight_level_setting[0].para_list[0] = level; */
-	/* push_table(lcm_backlight_level_setting,
-	  sizeof(lcm_backlight_level_setting) / sizeof(struct LCM_setting_table), 1); */
+	/*lcm_backlight_level_setting[0].para_list[0] = level; */
+	/*push_table(lcm_backlight_level_setting, sizeof(lcm_backlight_level_setting)
+	 * / sizeof(struct LCM_setting_table), 1); */
 }
 
-
 LCM_DRIVER r63419_wqhd_boyi_vdo_lcm_drv = {
-	.name = "r63419_wqhd_boyi_vdo",
+	.name           = "r63419_wqhd_boyi_vdo",
 	.set_util_funcs = lcm_set_util_funcs,
-	.get_params = lcm_get_params,
-	.init = lcm_init,
-	.suspend = lcm_suspend,
-	.resume = lcm_resume,
-	.compare_id = lcm_compare_id,
-	.init_power = lcm_init_power,
-	.resume_power = lcm_resume_power,
-	.suspend_power = lcm_suspend_power,
-	.ata_check = lcm_ata_check,
-	.set_backlight_cmdq = lcm_setbacklight_cmdq,
+	.get_params     = lcm_get_params,
+	.init           = lcm_init,
+	.suspend        = lcm_suspend,
+	.resume         = lcm_resume,
+	.compare_id     = lcm_compare_id,
+	.init_power	= lcm_init_power,
+	.resume_power   = lcm_resume_power,
+	.suspend_power  = lcm_suspend_power,
+	.ata_check	= lcm_ata_check,
+	.set_backlight_cmdq  = lcm_setbacklight_cmdq,
 #if (LCM_DSI_CMD_MODE)
-	.update = lcm_update,
+	.update         = lcm_update,
 #endif
 
 };
-
 /* END PN:DTS2013053103858 , Added by d00238048, 2013.05.31*/
