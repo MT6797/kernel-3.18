@@ -34,12 +34,18 @@ extern int iMultiReadReg(u16 a_u2Addr , u8 * a_puBuff , u16 i2cId, u8 number);
 
 BYTE IMX230_DCC_data[96]= {0};
 BYTE IMX230_SPC_data[352]= {0};
-
+BYTE IMX230_AWB_data[30]= {0};
+BYTE IMX230_LSC_data[800]= {0};
 
 static bool get_done = false;
 static int last_size = 0;
 static int last_offset = 0;
 
+static void imx230_write_cmos_sensor(kal_uint32 addr, kal_uint32 para)
+{
+    char pu_send_cmd[3] = {(char)(addr >> 8), (char)(addr & 0xFF), (char)(para & 0xFF)};
+    iWriteRegI2C(pu_send_cmd, 3, 0x20);
+}
 
 static bool selective_read_eeprom(kal_uint16 addr, BYTE* data)
 {
@@ -69,6 +75,143 @@ static bool _read_imx230_eeprom(kal_uint16 addr, BYTE* data, int size ){
 }
 
 
+void read_imx230_LSC(BYTE* data){
+
+	int addr = 0x0023;
+	int size = 706;
+	int checksum = 0;
+	int i;
+
+	LOG_INF("read imx230 SPC, size = %d\n", size);
+#if 1
+	if(!get_done || last_size != size || last_offset != addr) {
+		if(!_read_imx230_eeprom(addr, IMX230_LSC_data, size)){
+			get_done = 0;
+            last_size = 0;
+            last_offset = 0;
+			//return false;
+		}
+	}
+#endif
+	for(i=1;i<705;i++)
+	checksum += IMX230_LSC_data[i];
+	for(i=0;i<704;i++)
+	imx230_write_cmos_sensor(0x7800+i,IMX230_LSC_data[i+1]);
+	
+	imx230_write_cmos_sensor(0x0220,0x00);
+	imx230_write_cmos_sensor(0x0B00,0x01);
+	imx230_write_cmos_sensor(0x6303,0x01);
+	checksum = checksum%255;
+printk("read imx230 lSC,%x %x checksum = %d\n", IMX230_LSC_data[0],IMX230_LSC_data[705],checksum);
+	//memcpy(data, IMX230_SPC_data , size);
+    //return true;
+}
+void read_imx230_AWB(BYTE* data){
+
+	int addr = 0x0;
+	int size = 25;
+	kal_uint16  RG = 0,BG = 0,typical_rg = 0,typical_bg=0;
+	kal_uint16 BoverG_dec,RoverG_dec_base,BoverG_dec_base,RoverG_dec;			
+	kal_uint16 R_test,B_test,G_test;
+	kal_uint16 R_test_H8,R_test_L8,B_test_H8,B_test_L8,G_test_H8,G_test_L8;
+	kal_uint32 G_test_R, G_test_B;
+
+	printk("read imx230 SPC, size = %d\n", size);
+#if 1
+	if(!get_done || last_size != size || last_offset != addr) {
+		if(!_read_imx230_eeprom(addr, IMX230_AWB_data, size)){
+			get_done = 0;
+            last_size = 0;
+            last_offset = 0;
+			//return false;
+		}
+	}
+#endif
+	RG = ((IMX230_AWB_data[10] &0xff)<< 8) | (IMX230_AWB_data[11] & 0xff) ;
+	BG = ((IMX230_AWB_data[12] &0xff)<< 8) | (IMX230_AWB_data[13] & 0xff) ;
+	
+	typical_rg = ((IMX230_AWB_data[16] &0xff)<< 8) | (IMX230_AWB_data[17] & 0xff) ;
+	typical_bg = ((IMX230_AWB_data[18] &0xff)<< 8) | (IMX230_AWB_data[19] & 0xff) ;
+	printk("read_imx230_AWB %x %x %x %x IMX230_AWB_data[10] = %x,IMX230_AWB_data[11] = %x\n",RG,BG,IMX230_AWB_data[12],IMX230_AWB_data[13],IMX230_AWB_data[10],IMX230_AWB_data[11]);
+	
+	BoverG_dec = BG;
+	BoverG_dec_base = 0x254;
+	RoverG_dec = RG;
+	RoverG_dec_base = 0x1f9;
+if(BoverG_dec < BoverG_dec_base)
+	{
+		if (RoverG_dec < RoverG_dec_base)
+		{
+			G_test = 0x100;
+			B_test = 0x100 * BoverG_dec_base / BoverG_dec;
+			R_test = 0x100 * RoverG_dec_base / RoverG_dec;
+		}
+		else
+		{
+			R_test = 0x100;
+			G_test = 0x100 * RoverG_dec / RoverG_dec_base;
+			B_test = G_test * BoverG_dec_base / BoverG_dec;
+		}
+	}
+	else
+	{
+		if (RoverG_dec < RoverG_dec_base)
+		{
+			B_test = 0x100;
+			G_test = 0x100 * BoverG_dec / BoverG_dec_base;
+			R_test = G_test * RoverG_dec_base / RoverG_dec;
+		}
+		else
+		{
+			G_test_B = BoverG_dec * 0x100 / BoverG_dec_base;
+			G_test_R = RoverG_dec * 0x100 / RoverG_dec_base;
+			if(G_test_B > G_test_R )
+			{
+				B_test = 0x100;
+				G_test = G_test_B;
+				R_test = G_test_B * RoverG_dec_base / RoverG_dec;
+			}
+			else
+			{
+				R_test = 0x100;
+				G_test = G_test_R;
+				B_test = G_test_R * BoverG_dec_base / BoverG_dec;
+			}
+		}
+	}
+	if(R_test < 0x100)
+	{
+		R_test = 0x100;
+	}
+	if(G_test < 0x100)
+	{
+		G_test = 0x100;
+	}
+	if(B_test < 0x100)
+	{
+		B_test = 0x100;
+	}
+	R_test_H8 =( R_test>>8)&0xFF;
+	R_test_L8 = R_test &0xFF;
+	B_test_H8 = (B_test>>8)&0xFF;
+	B_test_L8 = B_test &0xFF;
+	G_test_H8 = (G_test>>8)&0xFF;
+	G_test_L8 = G_test &0xFF;
+	
+	//reset the digital gain
+	imx230_write_cmos_sensor(0x020e,G_test_H8);
+	imx230_write_cmos_sensor(0x020F,G_test_L8);
+	imx230_write_cmos_sensor(0x0210,R_test_H8);
+	imx230_write_cmos_sensor(0x0211,R_test_L8);
+	imx230_write_cmos_sensor(0x0212,B_test_H8);
+	imx230_write_cmos_sensor(0x0213,B_test_L8);
+	imx230_write_cmos_sensor(0x0214,G_test_H8);
+	imx230_write_cmos_sensor(0x0215,G_test_L8);
+	
+	printk("R_test=0x%x,G_test=0x%x,B_test=0x%x",R_test,G_test,B_test);
+	//memcpy(data, IMX230_AWB_data , size);
+    //return true;
+}
 void read_imx230_SPC(BYTE* data){
 
 	//int addr = 0x2E8;

@@ -67,7 +67,8 @@ static DEFINE_SPINLOCK(imgsensor_drv_lock);
 
 //extern void read_imx230_SPC( BYTE* data );
 //extern void read_imx230_DCC( kal_uint16 addr,BYTE* data, kal_uint32 size);
-
+extern void read_imx230_AWB( BYTE* data );
+extern void read_imx230_LSC( BYTE* data );
 
 
 static imgsensor_info_struct imgsensor_info = {
@@ -1455,6 +1456,8 @@ static void preview_setting_HDR_ES2(void)
 
 static void capture_setting(kal_uint16 currefps)
 {
+	//BYTE* data = NULL;
+	BYTE data[30]={0};
     LOG_INF("E! currefps:%d\n",currefps);
     if (currefps == 150) { //15fps for PIP
 	write_cmos_sensor(0x0100,0x00);
@@ -1682,11 +1685,14 @@ write_cmos_sensor(0x3013,0x01);
 	write_cmos_sensor(0x0100,0x01);
 
 	}
+	read_imx230_AWB(data);
+	read_imx230_LSC(data);
 }
 
 static void capture_setting_HDR_ES2(void)
 {
-
+//BYTE* data = NULL;
+BYTE data[30]={0};
   /*24fps for Normal capture & ZSD*/
 	write_cmos_sensor(0x0100,0x00);
 
@@ -1798,7 +1804,8 @@ static void capture_setting_HDR_ES2(void)
 	write_cmos_sensor(0x3011,0x00);
 	write_cmos_sensor(0x3013,0x01);
 
-
+read_imx230_AWB(data);
+read_imx230_LSC(data);
 	/*PDAF*/
 	/*PD_CAL_ENALBE*/
 	write_cmos_sensor(0x3121,0x01);
