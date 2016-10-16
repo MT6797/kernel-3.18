@@ -427,6 +427,10 @@ static void lcm_get_params(LCM_PARAMS *params)
 	params->dsi.horizontal_backporch				= 60;/* hsa+hbp 60~80; */
 	params->dsi.horizontal_frontporch				= 150;/* >150 */
 	params->dsi.horizontal_active_pixel				= FRAME_WIDTH;
+
+	params->physical_width  = 68000; 
+	params->physical_height = 122000;
+
 #if (LCM_DSI_CMD_MODE)
 	params->dsi.PLL_CLOCK = 450; /*this value must be in MTK suggested table */
 #else
