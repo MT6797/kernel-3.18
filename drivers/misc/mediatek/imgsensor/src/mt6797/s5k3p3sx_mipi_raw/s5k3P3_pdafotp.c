@@ -46,7 +46,7 @@ extern int iMultiReadReg(u16 a_u2Addr , u8 * a_puBuff , u16 i2cId, u8 number);
 #define S5K3P3_MAX_OFFSET		0xFFFF
 
 #define DATA_SIZE 2048
-BYTE s5k3P3_eeprom_data[DATA_SIZE]= {0};
+BYTE s5k3p3_eeprom_data[DATA_SIZE]= {0};
 static bool get_done = false;
 static int last_size = 0;
 static int last_offset = 0;
@@ -64,6 +64,21 @@ static bool selective_read_eeprom(kal_uint16 addr, BYTE* data)
 }
 
 static bool _read_3P3_eeprom(kal_uint16 addr, BYTE* data, kal_uint32 size ){
+	int i = 0;
+	int offset = addr;
+	for(i = 0; i < size; i++) {
+		if(!selective_read_eeprom(offset, &data[i])){
+			return false;
+		}
+		LOG_INF("read_eeprom 0x%0x %d\n",offset, data[i]);
+		offset++;
+	}
+	get_done = true;
+	last_size = size;
+	last_offset = addr;
+    return true;
+	
+	/* 
 	int i = 0, count = 0;
 	int offset = addr;
 	printk("zhouzhenshu %s offset=0x%x  size=%d  \n",__func__,offset,size);
@@ -99,11 +114,24 @@ static bool _read_3P3_eeprom(kal_uint16 addr, BYTE* data, kal_uint32 size ){
 	get_done = true;
 	last_size = size;
 	last_offset = addr;
-    return true;
+    return true; */
 }
 
 bool read_3P3_eeprom( kal_uint16 addr, BYTE* data, kal_uint32 size)
 {
+	addr = 0x0782;
+	size = 496;
+	_read_3P3_eeprom(addr, s5k3p3_eeprom_data, size);
+	memcpy(data, s5k3p3_eeprom_data, 496);
+
+	addr = 0x0972;
+	size = 908;
+	_read_3P3_eeprom(addr, s5k3p3_eeprom_data, size);
+	memcpy(data+496, s5k3p3_eeprom_data, 908);	
+
+	
+	return true;
+/*
 	printk("deng, %s() \n",__func__);
 	LOG_INF("read_otp_pdaf_data enter,get_done=%d,last_size=%d,size=%d,last_offset=%d,addr=%d\n",get_done,last_size,size,last_offset,addr);
 	if(1){//!get_done || last_size != size || last_offset != addr) {
@@ -118,7 +146,7 @@ bool read_3P3_eeprom( kal_uint16 addr, BYTE* data, kal_uint32 size)
 	}
 	//memcpy(data, eeprom_data, size);
 	LOG_INF("read_otp_pdaf_data end");
-    return true;
+    return true; */
 }
 
 

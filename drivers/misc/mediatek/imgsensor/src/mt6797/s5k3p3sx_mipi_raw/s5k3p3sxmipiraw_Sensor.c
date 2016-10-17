@@ -30,7 +30,7 @@
  * Upper this line, this part is controlled by CC/CQ. DO NOT MODIFY!!
  *============================================================================
  ****************************************************************************/
-
+#define DEBUG
 #include <linux/videodev2.h>
 #include <linux/i2c.h>
 #include <linux/platform_device.h>
@@ -1582,7 +1582,8 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 					*(MUINT32 *)(uintptr_t)(*(feature_data+1)) = 1;
 					break;
 				case MSDK_SCENARIO_ID_VIDEO_PREVIEW:
-					*(MUINT32 *)(uintptr_t)(*(feature_data+1)) = 0; // video & capture use same setting
+					printk("deng, 1582 MSDK_SCENARIO_ID_VIDEO_PREVIEW \n");
+					*(MUINT32 *)(uintptr_t)(*(feature_data+1)) = 0; // video & capture use same setting //4k video should disable pdaf
 					break;
 				case MSDK_SCENARIO_ID_HIGH_SPEED_VIDEO:
 					*(MUINT32 *)(uintptr_t)(*(feature_data+1)) = 0;
@@ -1591,6 +1592,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 					*(MUINT32 *)(uintptr_t)(*(feature_data+1)) = 0;
 					break;
 				case MSDK_SCENARIO_ID_CAMERA_PREVIEW:
+					printk("deng, 1582 MSDK_SCENARIO_ID_CAMERA_PREVIEW \n");
 					*(MUINT32 *)(uintptr_t)(*(feature_data+1)) = 1;
 					break;
 				default:
