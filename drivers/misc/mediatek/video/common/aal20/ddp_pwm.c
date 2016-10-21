@@ -354,6 +354,8 @@ static void disp_pwm_log(int level_1024, int log_type)
 	}
 
 }
+
+#ifdef CONFIG_MTK_BL229X
 extern int g_bl229x_enbacklight;
 static disp_pwm_id_t mbacklight_id = 0;
 static int mbacklight_brightness = 0;
@@ -368,7 +370,7 @@ int bl229x_setbacklight(int onoff)
 	return mbacklight_brightness;
 }
 EXPORT_SYMBOL(bl229x_setbacklight);
-
+#endif
 
 int disp_pwm_set_backlight_cmdq(disp_pwm_id_t id, int level_1024, void *cmdq)
 {
@@ -376,6 +378,8 @@ int disp_pwm_set_backlight_cmdq(disp_pwm_id_t id, int level_1024, void *cmdq)
 	int old_pwm;
 	int index;
 	int abs_diff;
+
+#ifdef CONFIG_MTK_BL229X
 	if(!g_bl229x_enbacklight)
 	{
 		mbacklight_id = id;
@@ -386,6 +390,7 @@ int disp_pwm_set_backlight_cmdq(disp_pwm_id_t id, int level_1024, void *cmdq)
 	}
 	mbacklight_brightness = level_1024;
 	printk("-----sky disp_pwm_set_backlight_cmdq=%d g_bl229x_enbacklight=%d\n",level_1024,g_bl229x_enbacklight);
+#endif
 
 	if ((DISP_PWM_ALL & id) == 0) {
 		PWM_ERR("[ERROR] disp_pwm_set_backlight_cmdq: invalid PWM ID = 0x%x", id);
