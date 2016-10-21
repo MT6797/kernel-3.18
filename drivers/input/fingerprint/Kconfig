@@ -29,6 +29,10 @@ config MTK_AFS12X
         bool "AFS12X for MediaTek package"
         default n
 
+config MTK_BL229X
+        bool "AFS12X for MediaTek package"
+        default n
+        
 config NB_FINGER_CLEAR_SUPPORT
         bool "NB FINGER CLEAR SUPPORT"
         default n

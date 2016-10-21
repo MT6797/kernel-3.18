@@ -1,0 +1,97 @@
+&pio{
+	fingerprint_spi0_default:spi0_def{
+/*
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO234__FUNC_SPI1_CLK_B>;
+			slew-rate = <1>;
+			bias-disable;
+		};
+		pins_cmd2_dat {
+			pins = <PINMUX_GPIO235__FUNC_SPI1_MI_B>;
+			slew-rate = <1>;
+			bias-disable;
+		};
+		pins_cmd3_dat {
+			pins = <PINMUX_GPIO236__FUNC_SPI1_MO_B>;
+			slew-rate = <0>;
+			bias-disable;
+		};
+		pins_cmd4_dat {
+			slew-rate = <1>;
+			bias-disable;
+		};
+*/
+	};
+	fingerprint_rst_default:fingerprint_rst_def{
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO256__FUNC_GPIO256>;
+			slew-rate = <1>;
+			output-high;
+		};
+	};
+	fingerprint_rst_disable:fingerprint_rst_dis{
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO256__FUNC_GPIO256>;
+			slew-rate = <1>;
+			output-low;
+		};
+	};
+
+	fingerprint_power_en_default:fingerprint_power_en_def{
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO140__FUNC_GPIO140>;
+			slew-rate = <1>;
+			output-high;
+		};
+	};
+	fingerprint_power_en_disable:fingerprint_power_en_dis{
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO140__FUNC_GPIO140>;
+			slew-rate = <1>;
+			output-low;
+		};
+	};
+
+	fingerprint_int_default:fingerprint_int_def{
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO86__FUNC_EINT9>;
+			slew-rate = <0>;
+			bias-pull-down = <00>;
+		};
+	};
+};
+
+&spi1{
+	fingerprint@0{
+		compatible = "blestech,BL229X";
+		
+		reg = <0x2>;
+		spi-max-frequency = <0x10000000>;
+		pinctrl-names = "spi0_default", "rst_output1", "rst_output0", "power_en_output1", "power_en_output0" ,"int_default";
+		pinctrl-0 = <&fingerprint_spi0_default>;
+		pinctrl-1 = <&fingerprint_rst_default>;
+		pinctrl-2 = <&fingerprint_rst_disable>;
+		pinctrl-3 = <&fingerprint_power_en_default>;
+		pinctrl-4 = <&fingerprint_power_en_disable>;
+		pinctrl-5 = <&fingerprint_int_default>;
+		
+		fingerprint,rst-gpio = <&pio 256 0>;
+		fingerprint,touch-int-gpio = <&pio 86 0>;
+		fingerprint,en-gpio = <&pio 140 0>;
+		
+		interrupt-parent = <&eintc>;
+		interrupts = <86 IRQ_TYPE_LEVEL_HIGH>;
+		debounce = <86 0>;
+		
+		status = "okay";
+	};
+};
+
+/*
+#define IRQ_TYPE_NONE		0
+#define IRQ_TYPE_EDGE_RISING	1
+#define IRQ_TYPE_EDGE_FALLING	2
+#define IRQ_TYPE_EDGE_BOTH	(IRQ_TYPE_EDGE_FALLING | IRQ_TYPE_EDGE_RISING)
+#define IRQ_TYPE_LEVEL_HIGH	4
+#define IRQ_TYPE_LEVEL_LOW	8
+*/
