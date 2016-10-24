@@ -721,8 +721,8 @@ int Interrupt_Init(int int_mode, int detect_period, int detect_threshold)
         }else{
                 printk("fingerprint request_irq can not find fp eint device node!.");
         }
- 	 if(int_mode == 0)
- 		disable_irq(fp_detect_irq);
+// 	 if(int_mode == 0)
+// 		disable_irq(fp_detect_irq);
         enable_irq(fp_detect_irq);
         fps_ints.drdy_irq_flag = DRDY_IRQ_ENABLE;
         }
