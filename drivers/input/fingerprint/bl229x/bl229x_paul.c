@@ -524,7 +524,7 @@ static __attribute__((unused)) int spi_send_cmd_fifo(struct bl229x_data *bl229x,
 
 
 //-------------------------------------------------------------------------------------------------
-static u8 bl229x_spi_read_reg(u8 nRegID)
+static u8 bl229x_spi_read_reg_remap(u8 nRegID)
 {
     u8 nAddr;
     //u8 data_tx[4];
@@ -540,9 +540,25 @@ static u8 bl229x_spi_read_reg(u8 nRegID)
     return spi_rx_local_buf[1];
 }
 
+//-------------------------------------------------------------------------------------------------
+static u8 bl229x_spi_read_reg(u8 nRegID)
+{
+    u8 nAddr;
+    u8 data_tx[4];
+    u8 data_rx[4];
+
+    nAddr = nRegID << 1;
+    nAddr &= 0x7F;
+
+    data_tx[0] = nAddr;
+    data_tx[1] = 0xff;
+    
+    spi_send_cmd(g_bl229x,data_tx,data_rx,2);
+    return data_rx[1];
+}
 
 /*----------------------------------------------------------------------------*/
-static u8 bl229x_spi_write_reg(u8 nRegID, u8 value)
+static u8 bl229x_spi_write_reg_remap(u8 nRegID, u8 value)
 {
     u8 nAddr;
     //u8 data_tx[4];
@@ -556,6 +572,23 @@ static u8 bl229x_spi_write_reg(u8 nRegID, u8 value)
    
     spi_send_cmd(g_bl229x, spi_tx_local_buf, spi_rx_local_buf, 2);
     return spi_rx_local_buf[1];
+}
+
+/*----------------------------------------------------------------------------*/
+static u8 bl229x_spi_write_reg(u8 nRegID, u8 value)
+{
+    u8 nAddr;
+    u8 data_tx[4];
+    u8 data_rx[4];
+
+    nAddr = nRegID << 1;
+    nAddr |= 0x80;
+
+    data_tx[0] = nAddr;
+    data_tx[1] = value;
+   
+    spi_send_cmd(g_bl229x,data_tx,data_rx,2);
+    return data_rx[1];
 }
 
 
@@ -2067,17 +2100,17 @@ static struct miscdevice bl229x_misc_device = {
 static int is_connected(struct bl229x_data *bl229x)
 {
 	int cur_contrast = 100;
-	bl229x_spi_write_reg(REGA_HOST_CMD, MODE_IDLE);
-	bl229x_spi_write_reg(REGA_RX_DACP_LOW,cur_contrast);
+	bl229x_spi_write_reg_remap(REGA_HOST_CMD, MODE_IDLE);
+	bl229x_spi_write_reg_remap(REGA_RX_DACP_LOW,cur_contrast);
 	BTL_DEBUG("write %d",cur_contrast);
-	m_is_conneted = bl229x_spi_read_reg(REGA_RX_DACP_LOW);
+	m_is_conneted = bl229x_spi_read_reg_remap(REGA_RX_DACP_LOW);
 	BTL_DEBUG("readback %d",m_is_conneted);
 	if(cur_contrast == m_is_conneted)
 	{
-		BTL_DEBUG("ok %d",bl229x_spi_read_reg(REGA_RX_DACP_LOW));
+		BTL_DEBUG("ok %d",bl229x_spi_read_reg_remap(REGA_RX_DACP_LOW));
 		return 1;
 	}
-	BTL_DEBUG("failed %d",bl229x_spi_read_reg(REGA_RX_DACP_LOW));
+	BTL_DEBUG("failed %d",bl229x_spi_read_reg_remap(REGA_RX_DACP_LOW));
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
