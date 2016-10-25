@@ -293,7 +293,7 @@ const struct fingerprintd_params_t fingerprintdParams = {
   .def_enroll_quality_area_threshold  = 18,
   .def_shortkey_disable = 0,
   .def_rate = 8,
-  .def_max_samples = 10,
+  .def_max_samples = 16,
   .def_debug_enable = DRIVER_DEBUG,
 #if (CHIP_VERSION == 3)
   .def_contrast_direction = 1,
