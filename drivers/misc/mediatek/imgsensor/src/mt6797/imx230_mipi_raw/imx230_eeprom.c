@@ -213,35 +213,14 @@ if(BoverG_dec < BoverG_dec_base)
     //return true;
 }
 void read_imx230_SPC(BYTE* data){
-
-	//int addr = 0x2E8;
-	int size = 352;
-
+	//int i;
+	int addr = 0x301;
+	int size = 0x460-0x301+1;//352
+	
 	LOG_INF("read imx230 SPC, size = %d\n", size);
-#if 0
+	
 	if(!get_done || last_size != size || last_offset != addr) {
 		if(!_read_imx230_eeprom(addr, IMX230_SPC_data, size)){
-			get_done = 0;
-            last_size = 0;
-            last_offset = 0;
-			return false;
-		}
-	}
-#endif
-	memcpy(data, IMX230_SPC_data , size);
-    //return true;
-}
-
-
-void read_imx230_DCC( kal_uint16 addr,BYTE* data, kal_uint32 size){
-	//int i;
-	addr = 0x448;
-	size = 96;
-
-	LOG_INF("read imx230 DCC, size = %d\n", size);
-
-	if(!get_done || last_size != size || last_offset != addr) {
-		if(!_read_imx230_eeprom(addr, IMX230_DCC_data, size)){
 			get_done = 0;
             last_size = 0;
             last_offset = 0;
@@ -249,8 +228,27 @@ void read_imx230_DCC( kal_uint16 addr,BYTE* data, kal_uint32 size){
 		}
 	}
 
-	memcpy(data, IMX230_DCC_data , size);
+	memcpy(data, IMX230_SPC_data , size);
     //return true;
+}
+
+
+void read_imx230_DCC( kal_uint16 addr,BYTE* data, kal_uint32 size){
+	//int i;
+	addr = 0x463;
+	size = 0x4c2-0x463+1;//96
+	
+	LOG_INF("read imx230 DCC, size = %d\n", size);
+	
+	if(!get_done || last_size != size || last_offset != addr) {
+		if(!_read_imx230_eeprom(addr, IMX230_DCC_data, size)){
+			get_done = 0;
+            last_size = 0;
+            last_offset = 0;
+		}
+	}
+
+	memcpy(data, IMX230_DCC_data , size);
 }
 
 

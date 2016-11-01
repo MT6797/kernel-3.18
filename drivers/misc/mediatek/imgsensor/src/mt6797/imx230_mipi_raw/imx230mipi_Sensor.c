@@ -58,15 +58,15 @@
 
 #define BYTE               unsigned char
 
-//static BOOL read_spc_flag = FALSE;
+static BOOL read_spc_flag = FALSE;
 
 
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
 
-//static BYTE imx230_SPC_data[352]={0};
+static BYTE imx230_SPC_data[352]={0};
 
-//extern void read_imx230_SPC( BYTE* data );
-//extern void read_imx230_DCC( kal_uint16 addr,BYTE* data, kal_uint32 size);
+extern void read_imx230_SPC( BYTE* data );
+extern void read_imx230_DCC( kal_uint16 addr,BYTE* data, kal_uint32 size);
 extern void read_imx230_AWB( BYTE* data );
 extern void read_imx230_LSC( BYTE* data );
 
@@ -196,20 +196,20 @@ static SENSOR_WINSIZE_INFO_STRUCT imgsensor_winsize_info[5] =
  { 5344, 4016,    0,  504, 5344, 3006, 1280,  720, 0000, 0000, 1280,  720,      0,    0, 1280,  720}};// slim video
 
  /*VC1 for HDR(DT=0X35) , VC2 for PDAF(DT=0X36), unit : 10bit*/
- //static SENSOR_VC_INFO_STRUCT SENSOR_VC_INFO[3]=
- //{/* Preview mode setting */
- //{0x03, 0x0a,   0x00,   0x08, 0x40, 0x00,
- // 0x00, 0x2b, 0x0A70, 0x07D8, 0x00, 0x35, 0x0280, 0x0001,
- // 0x00, 0x36, 0x0C48, 0x0001, 0x03, 0x00, 0x0000, 0x0000},
+ static SENSOR_VC_INFO_STRUCT SENSOR_VC_INFO[3]=
+ {/* Preview mode setting */
+ {0x03, 0x0a,   0x00,   0x08, 0x40, 0x00,
+ 0x00, 0x2b, 0x0A70, 0x07D8, 0x00, 0x35, 0x0280, 0x0001,
+ 0x00, 0x36, 0x0C48, 0x0001, 0x03, 0x00, 0x0000, 0x0000},
   /* Capture mode setting */
- // {0x03, 0x0a,	 0x00,	 0x08, 0x40, 0x00,
-  // 0x00, 0x2b, 0x14E0, 0x0FB0, 0x00, 0x35, 0x0280, 0x0001,
-  //0x00, 0x36, 0x1a18, 0x0001, 0x03, 0x00, 0x0000, 0x0000},
+ {0x03, 0x0a,	 0x00,	 0x08, 0x40, 0x00,
+  0x00, 0x2b, 0x14E0, 0x0FB0, 0x00, 0x35, 0x0280, 0x0001,
+  0x00, 0x36, 0x1a18, 0x0001, 0x03, 0x00, 0x0000, 0x0000},
    /* Video mode setting */
-  //{0x02, 0x0a,	 0x00,	 0x08, 0x40, 0x00,
-  // 0x00, 0x2b, 0x14E0, 0x0FB0, 0x01, 0x00, 0x0000, 0x0000,
-  // 0x02, 0x00, 0x0000, 0x0000, 0x03, 0x00, 0x0000, 0x0000}
-//};
+  {0x02, 0x0a,	 0x00,	 0x08, 0x40, 0x00,
+  0x00, 0x2b, 0x14E0, 0x0FB0, 0x01, 0x00, 0x0000, 0x0000,
+  0x02, 0x00, 0x0000, 0x0000, 0x03, 0x00, 0x0000, 0x0000}
+};
 
 typedef struct
 {
@@ -395,7 +395,7 @@ static kal_uint32 imx230_ATR(UINT16 DarkLimit, UINT16 OverExp)
                                                      */
     return ERROR_NONE;
 }
-#endif/*
+#endif
 static MUINT32 cur_startpos = 0;
 static MUINT32 cur_size = 0;
 
@@ -425,18 +425,18 @@ static void imx230_set_pd_focus_area(MUINT32 startpos, MUINT32 size)
 
 	if(imgsensor.pdaf_mode == 1)
 	{
-		LOG_INF("GC pre PDAF\n");*/
+		LOG_INF("GC pre PDAF\n");
 		/*PDAF*/
 		/*PD_CAL_ENALBE*/
-	//	write_cmos_sensor(0x3121,0x01);
+		write_cmos_sensor(0x3121,0x01);
 		/*AREA MODE*/
-		//write_cmos_sensor(0x31B0,0x02);// 8x6 output
-		//write_cmos_sensor(0x31B4,0x01);// 8x6 output
+		write_cmos_sensor(0x31B0,0x02);// 8x6 output
+		write_cmos_sensor(0x31B4,0x01);// 8x6 output
 		/*PD_OUT_EN=1*/
-	//	write_cmos_sensor(0x3123,0x01);
+		write_cmos_sensor(0x3123,0x01);
 
 		/*Fixed area mode*/
-	/*	
+		
 		write_cmos_sensor(0x3158,(start_x_pos >> 8) & 0xFF);
 		write_cmos_sensor(0x3159,start_x_pos & 0xFF);// X start
 		write_cmos_sensor(0x315a,(start_y_pos >> 8) & 0xFF);
@@ -477,7 +477,7 @@ static void imx230_apply_SPC(void)
 	}
 
 }
-*/
+
 static void set_dummy(void)
 {
     LOG_INF("dummyline = %d, dummypixels = %d \n", imgsensor.dummy_line, imgsensor.dummy_pixel);
@@ -2538,6 +2538,7 @@ static kal_uint32 open(void)
 
     /* initail sequence write in  */
     sensor_init();
+	imx230_apply_SPC();
 
     spin_lock(&imgsensor_drv_lock);
 
@@ -2794,7 +2795,7 @@ static kal_uint32 get_info(MSDK_SCENARIO_ID_ENUM scenario_id,
     sensor_info->IHDR_Support = imgsensor_info.ihdr_support;
     sensor_info->IHDR_LE_FirstLine = imgsensor_info.ihdr_le_firstline;
     sensor_info->SensorModeNum = imgsensor_info.sensor_mode_num;
-	//sensor_info->PDAF_Support = 2; /*0: NO PDAF, 1: PDAF Raw Data mode, 2:PDAF VC mode*/
+	sensor_info->PDAF_Support = 2; /*0: NO PDAF, 1: PDAF Raw Data mode, 2:PDAF VC mode*/
 
     sensor_info->SensorMIPILaneNumber = imgsensor_info.mipi_lane_num;
     sensor_info->SensorClockFreq = imgsensor_info.mclk;
@@ -3032,7 +3033,6 @@ static kal_uint32 get_default_framerate_by_scenario(MSDK_SCENARIO_ID_ENUM scenar
     return ERROR_NONE;
 }
 
-/*
 static kal_uint32 imx230_awb_gain(SET_SENSOR_AWB_GAIN *pSetSensorAWB)
 {
     UINT32 rgain_32, grgain_32, gbgain_32, bgain_32;
@@ -3058,7 +3058,6 @@ static kal_uint32 imx230_awb_gain(SET_SENSOR_AWB_GAIN *pSetSensorAWB)
     write_cmos_sensor(0x0b95, gbgain_32 & 0xFF);
     return ERROR_NONE;
 }
-*/
 
 static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
                              UINT8 *feature_para,UINT32 *feature_para_len)
@@ -3071,8 +3070,8 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 	//unsigned long long *feature_return_data = (unsigned long long*)feature_para;
 
     SENSOR_WINSIZE_INFO_STRUCT *wininfo;
-    //SENSOR_VC_INFO_STRUCT *pvcinfo;
-    //SET_SENSOR_AWB_GAIN *pSetSensorAWB=(SET_SENSOR_AWB_GAIN *)feature_para;
+    SENSOR_VC_INFO_STRUCT *pvcinfo;
+    SET_SENSOR_AWB_GAIN *pSetSensorAWB=(SET_SENSOR_AWB_GAIN *)feature_para;
     MSDK_SENSOR_REG_INFO_STRUCT *sensor_reg_data=(MSDK_SENSOR_REG_INFO_STRUCT *) feature_para;
 
     LOG_INF("feature_id = %d\n", feature_id);
@@ -3128,7 +3127,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 			break;
 		case SENSOR_FEATURE_GET_PDAF_DATA:
 			LOG_INF("SENSOR_FEATURE_GET_PDAF_DATA\n");
-			//read_imx230_DCC((kal_uint16 )(*feature_data),(char*)(uintptr_t)(*(feature_data+1)),(kal_uint32)(*(feature_data+2)));
+			read_imx230_DCC((kal_uint16 )(*feature_data),(char*)(uintptr_t)(*(feature_data+1)),(kal_uint32)(*(feature_data+2)));
             break;
         case SENSOR_FEATURE_SET_TEST_PATTERN:
             set_test_pattern_mode((BOOL)*feature_data);
@@ -3177,7 +3176,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
             LOG_INF("SENSOR_SET_SENSOR_IHDR LE=%d, SE=%d, Gain=%d\n",(UINT16)*feature_data,(UINT16)*(feature_data+1),(UINT16)*(feature_data+2));
             ihdr_write_shutter_gain(*feature_data,*(feature_data+1),*(feature_data+2));
             break;
-		/*case SENSOR_FEATURE_GET_VC_INFO:
+		case SENSOR_FEATURE_GET_VC_INFO:
             LOG_INF("SENSOR_FEATURE_GET_VC_INFO %d\n", (UINT16)*feature_data);
             pvcinfo = (SENSOR_VC_INFO_STRUCT *)(uintptr_t)(*(feature_data+1));
             switch (*feature_data_32) {
@@ -3195,10 +3194,10 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
             break;
 		case SENSOR_FEATURE_SET_AWB_GAIN:
             imx230_awb_gain(pSetSensorAWB);
-            break;*/
+            break;
 		/*END OF HDR CMD*/
 		/*PDAF CMD*/
-		/*case SENSOR_FEATURE_GET_SENSOR_PDAF_CAPACITY:
+		case SENSOR_FEATURE_GET_SENSOR_PDAF_CAPACITY:
 			LOG_INF("SENSOR_FEATURE_GET_SENSOR_PDAF_CAPACITY scenarioId:%llu\n", *feature_data);
 			//PDAF capacity enable or not, 2p8 only full size support PDAF
 			switch (*feature_data) {
@@ -3225,12 +3224,12 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 		case SENSOR_FEATURE_SET_PDAF:
 			LOG_INF("PDAF mode :%d\n", *feature_data_16);
 			imgsensor.pdaf_mode= *feature_data_16;
-			break;*/
+			break;
 		/*End of PDAF*/
-		/*case SENSOR_FEATURE_SET_PDFOCUS_AREA:
+		case SENSOR_FEATURE_SET_PDFOCUS_AREA:
             LOG_INF("SENSOR_FEATURE_SET_IMX230_PDFOCUS_AREA Start Pos=%d, Size=%d\n",(UINT32)*feature_data,(UINT32)*(feature_data+1));
             imx230_set_pd_focus_area(*feature_data,*(feature_data+1));
-			break;*/
+			break;
         default:
             break;
     }
